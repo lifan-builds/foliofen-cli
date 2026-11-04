@@ -20,9 +20,9 @@ storage, not collection by a Foliofen server.
 - Foliofen does not use medical records for advertising.
 - Extracted records are stored locally in the user's Chrome profile using
   IndexedDB.
-- Ordinary extraction and exports stay local. Optional AI features send selected
-  record context to the configured provider or endpoint. Users control any
-  subsequent sharing of exported files.
+- Ordinary extraction and exports stay local. Selected record context is sent
+  to the configured AI provider or endpoint only when the user explicitly
+  enables or uses an AI feature. Users control subsequent sharing of exports.
 
 ## Data Processed
 
