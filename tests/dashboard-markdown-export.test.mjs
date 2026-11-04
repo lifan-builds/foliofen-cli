@@ -57,9 +57,9 @@ test('buildMarkdownExportDownload creates a patient-friendly Markdown records fi
     },
   });
 
-  assert.equal(exportDownload.filename, 'mychart-cli-records-2026-05-12T18-30-00-000Z.md');
+  assert.equal(exportDownload.filename, 'foliofen-cli-records-2026-05-12T18-30-00-000Z.md');
   assert.equal(exportDownload.mimeType, 'text/markdown');
-  assert.match(exportDownload.content, /^# mychart-cli Records Export/);
+  assert.match(exportDownload.content, /^# foliofen-cli Records Export/);
   assert.match(exportDownload.content, /Disclaimer: This is not medical advice\./);
   assert.match(exportDownload.content, /Records exported: 1 of 2/);
   assert.match(exportDownload.content, /- Patient: Patient One/);
@@ -222,7 +222,7 @@ test('buildDateRangeMarkdownExportDownload exports records in an explicit clinic
   });
 
   assert.deepEqual(filtered.map((card) => card.id), ['inside', 'inside-long']);
-  assert.equal(exportDownload.filename, 'mychart-cli-records-2026-05-05-to-2026-05-12-2026-05-15T18-30-00-000Z.md');
+  assert.equal(exportDownload.filename, 'foliofen-cli-records-2026-05-05-to-2026-05-12-2026-05-15T18-30-00-000Z.md');
   assert.match(exportDownload.content, /Date from: 2026-05-05/);
   assert.match(exportDownload.content, /Date to: 2026-05-12/);
   assert.match(exportDownload.content, /Inside Range/);

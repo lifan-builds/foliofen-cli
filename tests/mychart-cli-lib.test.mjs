@@ -535,7 +535,7 @@ test('agent export helpers filter records and preserve dashboard Markdown format
 
   assert.deepEqual(filtered.cards.map((card) => card.id), ['recent-lab']);
   assert.equal(exportDownload.exportedCards.length, 1);
-  assert.match(exportDownload.content, /# mychart-cli Records Export/);
+  assert.match(exportDownload.content, /# foliofen-cli Records Export/);
   assert.match(exportDownload.content, /ALT\nYour value is 113 U\/L/);
   assert.doesNotMatch(exportDownload.content, /Other CMP/);
   assert.doesNotMatch(exportDownload.content, /Progress Note/);
@@ -700,7 +700,7 @@ test('buildRecordsAgentJsonlExport exposes filtered records as agent JSONL', () 
   });
   const lines = exportDownload.content.trim().split('\n').map((line) => JSON.parse(line));
 
-  assert.equal(exportDownload.filename, 'mychart-cli-records-2026-05-23-to-2026-05-25-2026-05-25T18-30-00-000Z.jsonl');
+  assert.equal(exportDownload.filename, 'foliofen-cli-records-2026-05-23-to-2026-05-25-2026-05-25T18-30-00-000Z.jsonl');
   assert.deepEqual(lines.map((line) => line.type), ['manifest', 'record', 'chunk']);
   assert.equal(lines[1].recordId, 'recent-lab');
   assert.equal(lines[2].text, 'ALT\nYour value is 113 U/L');

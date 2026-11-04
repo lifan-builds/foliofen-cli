@@ -52,7 +52,7 @@ export async function openMyChartPage(browser, mychartUrl) {
 }
 
 function printSession(session) {
-  console.log('mychart-cli live harness is running.');
+  console.log('foliofen-cli live harness is running.');
   console.log(`  Profile:       ${session.profileDir}`);
   console.log(`  CDP endpoint:  ${session.endpoint}`);
   console.log('  MyChart:       configured portal');

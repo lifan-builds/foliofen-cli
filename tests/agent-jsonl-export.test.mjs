@@ -61,7 +61,7 @@ test('buildAgentJsonlExport emits manifest, record, and chunk JSONL lines', () =
 
   const lines = parseJsonl(exportDownload.content);
 
-  assert.equal(exportDownload.filename, 'mychart-cli-records-2026-06-09-to-2026-06-09-2026-06-09T12-00-00-000Z.jsonl');
+  assert.equal(exportDownload.filename, 'foliofen-cli-records-2026-06-09-to-2026-06-09-2026-06-09T12-00-00-000Z.jsonl');
   assert.equal(exportDownload.mimeType, 'application/x-ndjson');
   assert.equal(lines.length, 3);
   assert.deepEqual(lines.map((line) => line.type), ['manifest', 'record', 'chunk']);

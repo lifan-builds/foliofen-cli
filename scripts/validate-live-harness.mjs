@@ -140,7 +140,7 @@ async function main() {
   } catch (error) {
     const port = process.env.AWESOME_MYCHART_DEBUG_PORT || DEFAULT_LIVE_HARNESS_PORT;
     const endpoint = createLiveHarnessEndpoint(port);
-    console.error(`Unable to reach mychart-cli live harness at ${endpoint}.`);
+    console.error(`Unable to reach foliofen-cli live harness at ${endpoint}.`);
     console.error('Launch it with scripts/launch-live-harness.sh, then log into MyChart in that window.');
     console.error(error.message);
     process.exit(1);

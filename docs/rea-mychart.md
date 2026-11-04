@@ -18,7 +18,7 @@ The shared Codex registration is managed with:
 ```
 
 REA requires Node.js 22.19+, 24.11+, or a later supported release. The normal
-mychart-cli runtime does not depend on REA.
+foliofen-cli runtime does not depend on REA.
 
 ## Safe source analysis
 

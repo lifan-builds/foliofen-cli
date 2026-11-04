@@ -28,7 +28,7 @@ export function buildMarkdownExportDownload({
     const timestamp = sanitizeTimestamp(generatedAt);
 
     return {
-        filename: `mychart-cli-records-${timestamp}.md`,
+        filename: `foliofen-cli-records-${timestamp}.md`,
         content: formatMarkdownExport({
             generatedAt,
             cards: exportedCards,
@@ -71,7 +71,7 @@ export function buildDateRangeMarkdownExportDownload({
 
     return {
         ...exportDownload,
-        filename: `mychart-cli-records-${sanitizeDateRange(startDate, endDate)}-${timestamp}.md`,
+        filename: `foliofen-cli-records-${sanitizeDateRange(startDate, endDate)}-${timestamp}.md`,
     };
 }
 
@@ -105,7 +105,7 @@ function formatMarkdownExport({
     matchingRecords,
 }) {
     const lines = [
-        '# mychart-cli Records Export',
+        '# foliofen-cli Records Export',
         '',
         `Generated: ${generatedAt}`,
         `Records exported: ${matchingRecords} of ${totalRecords}`,

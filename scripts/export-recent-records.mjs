@@ -16,7 +16,7 @@ function usage() {
   return `Usage:
   node scripts/export-recent-records.mjs [options]
 
-Exports mychart-cli records from the live harness without printing record text
+Exports foliofen-cli records from the live harness without printing record text
 to stdout. For unattended runs, prefer:
   npm run mychart -- browser ensure --headless --validate --wait
 Use npm run init:live when interactive login, MFA, CAPTCHA, or device
@@ -48,7 +48,7 @@ Options:
   --all                          Export all matching records.
   --patient TEXT                 Patient label contains TEXT.
   --patient-label-exact TEXT     Exact patient label match; preferred for automation.
-  --patient-key KEY              Exact mychart-cli patient key.
+  --patient-key KEY              Exact foliofen-cli patient key.
   --category CATEGORY            visits, test-results, medications, etc.
   --query TEXT                   Dashboard-style search query.
   --output PATH                  Output path.

@@ -134,6 +134,15 @@ test('resolveSinceLastPullRange falls back to export filenames, then recent days
   assert.equal(filenameRange.endDate, '2026-06-10');
   assert.equal(filenameRange.fallbackSource, 'export-filename');
 
+  await writeFile(path.join(dir, 'foliofen-cli-records-2026-06-08-to-2026-06-09-2026-06-09T12-00-00-000Z.jsonl'), '');
+  const renamedRange = await resolveSinceLastPullRange({
+    cards: [{ id: 'new', date: '2026-06-10' }],
+    options: { pullStatePath: statePath, days: 2 },
+    outputDir: dir,
+  });
+  assert.equal(renamedRange.startDate, '2026-06-09');
+  assert.equal(renamedRange.fallbackSource, 'export-filename');
+
   const daysDir = await mkdtemp(path.join(tmpdir(), 'mychart-days-range-'));
   const daysRange = await resolveSinceLastPullRange({
     cards: [{ id: 'new', date: '2026-06-10' }],

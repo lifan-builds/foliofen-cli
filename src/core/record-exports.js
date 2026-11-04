@@ -24,16 +24,16 @@ export function assertFreshDeepSync({
   }
   const lastDeepSyncAt = syncMetadata?.lastDeepSyncAt || '';
   if (!lastDeepSyncAt) {
-    throw new Error('No previous mychart-cli deep sync timestamp is available. Run with --sync or --allow-stale-export.');
+    throw new Error('No previous foliofen-cli deep sync timestamp is available. Run with --sync or --allow-stale-export.');
   }
   const lastDeepSyncTime = Date.parse(lastDeepSyncAt);
   if (Number.isNaN(lastDeepSyncTime)) {
-    throw new Error(`mychart-cli deep sync timestamp is invalid: ${lastDeepSyncAt}`);
+    throw new Error(`foliofen-cli deep sync timestamp is invalid: ${lastDeepSyncAt}`);
   }
   const ageMinutes = (now.getTime() - lastDeepSyncTime) / 60000;
   if (ageMinutes > maxAgeNumber) {
     throw new Error(
-      `mychart-cli deep sync is stale (${Math.floor(ageMinutes)} minutes old; max ${maxAgeNumber}). Run with --sync or --allow-stale-export.`,
+      `foliofen-cli deep sync is stale (${Math.floor(ageMinutes)} minutes old; max ${maxAgeNumber}). Run with --sync or --allow-stale-export.`,
     );
   }
   return {

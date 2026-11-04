@@ -1,6 +1,6 @@
 # Privacy
 
-mychart-cli handles medical records and authenticated browser state. Treat its
+foliofen-cli handles medical records and authenticated browser state. Treat its
 data directory and every export as sensitive.
 
 ## Local-first boundary
@@ -33,7 +33,7 @@ built-in LLM provider. It does not send records to the project maintainer.
 
 Markdown and JSONL exports are private medical data. If you open or upload them
 with another application, including an AI service, that application's privacy
-and data-retention terms apply. mychart-cli cannot enforce those terms.
+and data-retention terms apply. foliofen-cli cannot enforce those terms.
 
 ## Public support
 

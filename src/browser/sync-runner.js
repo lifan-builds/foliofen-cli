@@ -37,7 +37,7 @@ export async function readLiveHarnessSession({
     return JSON.parse(await readFile(sessionPath, 'utf8'));
   } catch (error) {
     throw new Error(
-      `Could not read mychart-cli live harness session at ${sessionPath}. Start the harness with npm run init:live first. ${error.message}`,
+      `Could not read foliofen-cli live harness session at ${sessionPath}. Start the harness with npm run init:live first. ${error.message}`,
     );
   }
 }
