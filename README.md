@@ -1,7 +1,7 @@
 # Foliofen CLI
 
 Foliofen CLI is an independent, local-first command-line tool for exporting
-records that you can already view in an MyChart® patient portal. It uses a dedicated
+records that you can already view in a MyChart® patient portal. It uses a dedicated
 Chrome profile, keeps credentials and records on your computer, and exports
 Markdown or JSONL for workflows you control.
 
@@ -13,6 +13,8 @@ health care provider.
 It does not provide medical advice.
 
 ## Try it without a portal account
+
+After installing from source below:
 
 ```bash
 node src/cli.mjs demo
@@ -37,7 +39,8 @@ For source development:
 git clone https://github.com/lifan-builds/foliofen-cli.git
 cd foliofen-cli
 npm install
-npm run foliofen -- demo
+npm install --global .
+foliofen-cli demo
 ```
 
 ## Configure
@@ -96,11 +99,11 @@ so shared stored records and `--since-last-pull` state remain patient-scoped.
 
 ```bash
 foliofen-cli records list --category test-results
-foliofen-cli export jsonl --latest-day --output ./mychart.jsonl
+foliofen-cli export jsonl --latest-day --output ./records.jsonl
 foliofen-cli export jsonl --all --patient-label-exact "Demo Patient" \
   --source-host mychart.example.org --output ./demo-records.jsonl
-foliofen-cli export markdown --latest-day --output ./mychart.md
-foliofen-cli export inspect ./mychart.jsonl
+foliofen-cli export markdown --latest-day --output ./records.md
+foliofen-cli export inspect ./records.jsonl
 ```
 
 JSONL is the machine-facing format. It starts with a manifest and then writes
