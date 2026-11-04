@@ -10,18 +10,19 @@ This policy is written for the Chrome Web Store listing and for users reviewing
 the source before installation.
 
 In this policy, data processing generally means local browser processing and
-storage, not collection by an Foliofen server.
+storage, not collection by a Foliofen server.
 
 ## Summary
 
-- Foliofen does not create an Foliofen account.
+- Foliofen does not create a Foliofen account.
 - Foliofen does not operate a cloud service.
 - Foliofen does not sell user data.
 - Foliofen does not use medical records for advertising.
 - Extracted records are stored locally in the user's Chrome profile using
   IndexedDB.
-- Medical-record text leaves the user's device only when the user explicitly
-  exports a file or uses an AI feature with a configured LLM provider.
+- Ordinary extraction and exports stay local. Optional AI features send selected
+  record context to the configured provider or endpoint. Users control any
+  subsequent sharing of exported files.
 
 ## Data Processed
 
@@ -44,7 +45,7 @@ Extracted records and generated index cards are stored in IndexedDB inside the
 browser profile where the extension is installed. The extension uses Chrome
 extension storage for settings, sync state, chat state, and diagnostics.
 
-Foliofen does not upload stored records to an Foliofen server.
+Foliofen does not upload stored records to a Foliofen server.
 
 ## AI Features
 
