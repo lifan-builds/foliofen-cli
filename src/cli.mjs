@@ -35,17 +35,17 @@ import { formatSyntheticDemo } from './core/demo.js';
 
 function usage() {
   return `Usage:
-  mychart-cli demo
-  mychart-cli browser start [--visible|--headless] [--profile PATH] [--data-dir PATH] [--url URL]
-  mychart-cli browser check
-  mychart-cli browser validate
-  mychart-cli browser ensure [--headless|--visible] [--validate] [--wait] [--timeout-seconds N] [--profile PATH] [--data-dir PATH] [--url URL]
-  mychart-cli sync [--login] [--categories visits,test-results,imaging] [--require-active-patient TEXT] [--exhaustive] [--max-broad-pages N] [--seed-url URL] [--force] [--max-pages N] [--max-records N] [--switch-patient TEXT]
-  mychart-cli records list [--patient-label-exact TEXT] [--source-host HOST] [--category TEXT] [--query TEXT] [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] [--json] [--store PATH] [--data-dir PATH]
-  mychart-cli records show --id ID [--json] [--store PATH] [--data-dir PATH]
-  mychart-cli export markdown [--sync] [--latest-day|--since-last-pull --pull-state PATH|--days N|--start-date YYYY-MM-DD --end-date YYYY-MM-DD|--all] [--patient-label-exact TEXT] [--source-host HOST] [--output PATH|--output-dir PATH] [--json-summary] [--store PATH] [--data-dir PATH]
-  mychart-cli export jsonl [--sync] [--latest-day|--since-last-pull --pull-state PATH|--days N|--start-date YYYY-MM-DD --end-date YYYY-MM-DD|--all] [--patient-label-exact TEXT] [--source-host HOST] [--output PATH|--output-dir PATH] [--json-summary] [--store PATH] [--data-dir PATH]
-  mychart-cli export inspect FILE [--json]
+  foliofen-cli demo
+  foliofen-cli browser start [--visible|--headless] [--profile PATH] [--data-dir PATH] [--url URL]
+  foliofen-cli browser check
+  foliofen-cli browser validate
+  foliofen-cli browser ensure [--headless|--visible] [--validate] [--wait] [--timeout-seconds N] [--profile PATH] [--data-dir PATH] [--url URL]
+  foliofen-cli sync [--login] [--categories visits,test-results,imaging] [--require-active-patient TEXT] [--exhaustive] [--max-broad-pages N] [--seed-url URL] [--force] [--max-pages N] [--max-records N] [--switch-patient TEXT]
+  foliofen-cli records list [--patient-label-exact TEXT] [--source-host HOST] [--category TEXT] [--query TEXT] [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] [--json] [--store PATH] [--data-dir PATH]
+  foliofen-cli records show --id ID [--json] [--store PATH] [--data-dir PATH]
+  foliofen-cli export markdown [--sync] [--latest-day|--since-last-pull --pull-state PATH|--days N|--start-date YYYY-MM-DD --end-date YYYY-MM-DD|--all] [--patient-label-exact TEXT] [--source-host HOST] [--output PATH|--output-dir PATH] [--json-summary] [--store PATH] [--data-dir PATH]
+  foliofen-cli export jsonl [--sync] [--latest-day|--since-last-pull --pull-state PATH|--days N|--start-date YYYY-MM-DD --end-date YYYY-MM-DD|--all] [--patient-label-exact TEXT] [--source-host HOST] [--output PATH|--output-dir PATH] [--json-summary] [--store PATH] [--data-dir PATH]
+  foliofen-cli export inspect FILE [--json]
 `;
 }
 

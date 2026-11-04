@@ -35,7 +35,7 @@ test('CLI sync parses value-bearing options as sync options without ambient CDP'
   const profileDir = await mkdtemp(path.join(tmpdir(), 'mychart-cli-no-session-'));
   await assert.rejects(
     () => main(['sync', '--profile', profileDir, '--switch-patient', 'Demo Child', '--seed-url', 'https://example.test/mychart/app/test-results/details?eorderid=1', '--max-pages', '1']),
-    /Could not read mychart-cli live harness session/,
+    /Could not read foliofen-cli live harness session/,
   );
 });
 

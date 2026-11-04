@@ -24,7 +24,7 @@ try {
   console.log(`MyChart tabs: ${mychartTabs.length}`);
 
 } catch (error) {
-  console.error(`Unable to reach mychart-cli live harness at ${endpoint}.`);
+  console.error(`Unable to reach foliofen-cli live harness at ${endpoint}.`);
   console.error(error.message);
   process.exit(1);
 }

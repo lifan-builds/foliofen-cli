@@ -1,10 +1,10 @@
 {
-  "name": "@lifan-builds/mychart-cli",
-  "version": "0.1.0",
-  "description": "Local-first CLI for exporting patient-owned MyChart records through a Chrome/Puppeteer harness.",
+  "name": "@lifan-builds/foliofen-cli",
+  "version": "0.1.1",
+  "description": "Foliofen CLI: export your health records locally as Markdown or JSONL.",
   "license": "MIT",
   "bin": {
-    "mychart-cli": "src/cli.mjs"
+    "foliofen-cli": "src/cli.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -23,15 +23,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lifan-builds/mychart-cli.git"
+    "url": "git+https://github.com/lifan-builds/foliofen-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/lifan-builds/mychart-cli/issues"
+    "url": "https://github.com/lifan-builds/foliofen-cli/issues"
   },
-  "homepage": "https://github.com/lifan-builds/mychart-cli#readme",
+  "homepage": "https://github.com/lifan-builds/foliofen-cli#readme",
   "keywords": [
-    "mychart",
-    "epic",
     "health-records",
     "local-first",
     "cli"
@@ -51,7 +49,8 @@
     "launch:live": "node scripts/launch-live-harness.mjs",
     "check:live": "node scripts/check-live-harness.mjs",
     "validate:live": "node scripts/validate-live-harness.mjs",
-    "export:recent": "node scripts/export-recent-records.mjs"
+    "export:recent": "node scripts/export-recent-records.mjs",
+    "foliofen": "node src/cli.mjs"
   },
   "dependencies": {
     "puppeteer-core": "^24.43.0"

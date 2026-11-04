@@ -5,7 +5,7 @@ import { initLiveHarness } from './init-live-harness.mjs';
 
 function printSummary({ session, validation }) {
   const lines = [
-    'mychart-cli headless live harness init is ready.',
+    'foliofen-cli headless live harness init is ready.',
     `  Profile:       ${session.profileDir}`,
     `  CDP endpoint:  ${session.endpoint}`,
     `  Browser PID:   ${session.browserPid || 'unknown'}`,
@@ -25,7 +25,7 @@ async function main() {
       'Usage:',
       '  node scripts/init-live-headless.mjs',
       '',
-      'Starts the mychart-cli live harness in Chrome headless mode for agent CLI sync.',
+      'Starts the foliofen-cli live harness in Chrome headless mode for agent CLI sync.',
       'If MyChart requires MFA, CAPTCHA, or device verification, stop this harness and use npm run init:live.',
     ].join('\n'));
     return;

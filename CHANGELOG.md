@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- Rename the product and executable to Foliofen CLI (`foliofen-cli`).
+- Keep existing data paths, configuration, and historical export discovery compatible.
+- Clarify independent ownership and MyChart compatibility.
+
+
 ## 0.1.0
 
 First public beta of the scoped npm package.

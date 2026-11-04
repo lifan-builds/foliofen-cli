@@ -58,7 +58,7 @@ export function buildSyntheticDemo() {
 export function formatSyntheticDemo() {
   const demo = buildSyntheticDemo();
   return [
-    'mychart-cli synthetic demo',
+    'foliofen-cli synthetic demo',
     'No network, login, browser profile, or patient data is used.',
     '',
     `Records: ${demo.recordCount}`,

@@ -1,6 +1,6 @@
 # Live harness
 
-mychart-cli uses a dedicated Chrome/Puppeteer profile for authenticated MyChart
+foliofen-cli uses a dedicated Chrome/Puppeteer profile for authenticated MyChart
 work. It never reuses the user's normal Chrome profile.
 
 ## Commands
@@ -8,13 +8,13 @@ work. It never reuses the user's normal Chrome profile.
 Visible harness:
 
 ```bash
-mychart-cli browser start --visible
+foliofen-cli browser start --visible
 ```
 
 Headless harness:
 
 ```bash
-mychart-cli browser start --headless
+foliofen-cli browser start --headless
 ```
 
 Headless startup uses the TCP CDP endpoint because recent macOS Chrome builds
@@ -24,9 +24,9 @@ sessions keep the pipe transport for better input behavior.
 Readiness and auth checks:
 
 ```bash
-mychart-cli browser check
-mychart-cli browser validate
-mychart-cli browser ensure --headless --validate --wait
+foliofen-cli browser check
+foliofen-cli browser validate
+foliofen-cli browser ensure --headless --validate --wait
 ```
 
 `check:live` verifies local CDP and a MyChart tab. `validate:live` and
@@ -55,7 +55,7 @@ https://mychart.example.org/mychart/Home
 Set `AWESOME_MYCHART_URL` when you need a specific MyChart portal:
 
 ```bash
-AWESOME_MYCHART_URL=https://mychart.example.org/mychart/Home mychart-cli browser start --visible
+AWESOME_MYCHART_URL=https://mychart.example.org/mychart/Home foliofen-cli browser start --visible
 ```
 
 ## Agent rules
@@ -65,7 +65,7 @@ AWESOME_MYCHART_URL=https://mychart.example.org/mychart/Home mychart-cli browser
 - Reuse the prepared MyChart tab; do not switch to the user's personal Chrome
   profile.
 - Use headless mode only when no MFA/CAPTCHA/device verification is expected.
-- Prefer `mychart-cli browser ensure --headless --validate --wait` for
+- Prefer `foliofen-cli browser ensure --headless --validate --wait` for
   unattended agent startup; it starts the harness if needed, validates CDP plus
   MyChart auth state, prints JSON status, and exits.
 - Keep credentials, browser profiles, record stores, and exports local. The

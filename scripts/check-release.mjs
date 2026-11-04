@@ -22,8 +22,8 @@ const allowedTopLevel = new Set([
 ]);
 
 const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-assert(packageJson.name === '@lifan-builds/mychart-cli', 'unexpected package name');
-assert(packageJson.bin?.['mychart-cli'] === 'src/cli.mjs', 'missing mychart-cli bin mapping');
+assert(packageJson.name === '@lifan-builds/foliofen-cli', 'unexpected package name');
+assert(packageJson.bin?.['foliofen-cli'] === 'src/cli.mjs', 'missing foliofen-cli bin mapping');
 assert(Number(String(packageJson.engines?.node || '').match(/\d+/)?.[0] || 0) >= 20, 'Node 20+ engine is required');
 assert(packageJson.dependencies?.['puppeteer-core'], 'puppeteer-core must be a runtime dependency');
 

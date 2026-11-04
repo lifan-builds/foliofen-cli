@@ -1,19 +1,21 @@
-# mychart-cli
+# Foliofen CLI
 
-mychart-cli is an unofficial, local-first command-line tool for exporting
-records that you can already view in an Epic MyChart portal. It uses a dedicated
+Foliofen CLI is an independent, local-first command-line tool for exporting
+records that you can already view in an MyChart® patient portal. It uses a dedicated
 Chrome profile, keeps credentials and records on your computer, and exports
 Markdown or JSONL for workflows you control.
 
 This is a public beta for macOS and Google Chrome. MyChart portals differ, so a
 workflow that works on one hospital's portal may need adaptation on another.
-The project is not affiliated with Epic Systems or any health care provider.
+MyChart is a registered trademark of Epic Systems Corporation. Foliofen is not
+affiliated with, endorsed by, or sponsored by Epic Systems Corporation or any
+health care provider.
 It does not provide medical advice.
 
-## Try it without a MyChart account
+## Try it without a portal account
 
 ```bash
-npx @lifan-builds/mychart-cli demo
+node src/cli.mjs demo
 ```
 
 The demo is deterministic and synthetic. It does not start Chrome, access the
@@ -21,20 +23,21 @@ network, create a browser profile, or write a record store.
 
 ## Install
 
-Node.js 20 or newer and Google Chrome are required.
+Node.js 20 or newer and Google Chrome are required. The renamed npm package
+is prepared for release; until it is published, use the source installation below.
 
 ```bash
-npm install --global @lifan-builds/mychart-cli
-mychart-cli --help
+npm install --global @lifan-builds/foliofen-cli
+foliofen-cli --help
 ```
 
 For source development:
 
 ```bash
-git clone https://github.com/lifan-builds/mychart-cli.git
-cd mychart-cli
+git clone https://github.com/lifan-builds/foliofen-cli.git
+cd foliofen-cli
 npm install
-npm run mychart -- demo
+npm run foliofen -- demo
 ```
 
 ## Configure
@@ -66,15 +69,15 @@ browser profile continues to use that location without moving anything.
 Start the visible browser harness:
 
 ```bash
-mychart-cli browser start --visible
+foliofen-cli browser start --visible
 ```
 
 Log in and complete MFA or device verification yourself. Keep that terminal
 open, then use another terminal:
 
 ```bash
-mychart-cli browser validate
-mychart-cli sync \
+foliofen-cli browser validate
+foliofen-cli sync \
   --categories visits,test-results \
   --require-active-patient "Demo Child"
 ```
@@ -92,12 +95,12 @@ so shared stored records and `--since-last-pull` state remain patient-scoped.
 ## Read and export records
 
 ```bash
-mychart-cli records list --category test-results
-mychart-cli export jsonl --latest-day --output ./mychart.jsonl
-mychart-cli export jsonl --all --patient-label-exact "Felix" \
-  --source-host mychart.seattlechildrens.org --output ./felix-sch.jsonl
-mychart-cli export markdown --latest-day --output ./mychart.md
-mychart-cli export inspect ./mychart.jsonl
+foliofen-cli records list --category test-results
+foliofen-cli export jsonl --latest-day --output ./mychart.jsonl
+foliofen-cli export jsonl --all --patient-label-exact "Demo Patient" \
+  --source-host mychart.example.org --output ./demo-records.jsonl
+foliofen-cli export markdown --latest-day --output ./mychart.md
+foliofen-cli export inspect ./mychart.jsonl
 ```
 
 JSONL is the machine-facing format. It starts with a manifest and then writes
@@ -114,7 +117,7 @@ establish coverage of messages, general documents, or other unrequested portal
 surfaces.
 
 Patient labels can be shared across portals in one local store. Use
-`--source-host` when a patient label such as `Felix` must stay restricted to a
+`--source-host` when a patient label such as `Demo Patient` must stay restricted to a
 specific MyChart origin; the host is included in incremental pull-state scope.
 
 ## What stays local
@@ -181,3 +184,11 @@ tests/                synthetic regression tests
 
 MIT licensed. Bug reports and contributions are welcome, but never include
 patient data, credentials, screenshots, authenticated URLs, or real exports.
+
+## Upgrading from the previous name
+
+The executable is now `foliofen-cli`. Existing private data directories,
+`MYCHART_CLI_HOME`, and `AWESOME_MYCHART_*` configuration remain compatible.
+The on-disk `mychart-cli` directory and `.awesome-mychart` legacy paths are
+internal compatibility identifiers; do not rename or delete them during this
+update. Existing exports remain readable.

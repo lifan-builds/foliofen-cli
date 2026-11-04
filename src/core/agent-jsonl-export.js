@@ -52,7 +52,7 @@ export function buildAgentJsonlExport({
   const lines = [manifest, ...recordLines, ...chunkLines].map((line) => JSON.stringify(line));
 
   return {
-    filename: `mychart-cli-records-${range}-${timestamp}.jsonl`,
+    filename: `foliofen-cli-records-${range}-${timestamp}.jsonl`,
     content: `${lines.join('\n')}\n`,
     mimeType: 'application/x-ndjson',
     exportedCards: deduped.cards,

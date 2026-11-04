@@ -26,7 +26,7 @@ export function createComputerUseAlignmentChecklist(session) {
 
 function printInitSummary({ session, validation }) {
   const lines = [
-    'mychart-cli live harness init is ready.',
+    'foliofen-cli live harness init is ready.',
     `  Profile:       ${session.profileDir}`,
     `  CDP endpoint:  ${session.endpoint}`,
     `  Browser PID:   ${session.browserPid || 'unknown'}`,
@@ -42,7 +42,7 @@ function printInitSummary({ session, validation }) {
 
 function printHeadlessInitSummary({ session, validation }) {
   const lines = [
-    'mychart-cli headless live harness init is ready.',
+    'foliofen-cli headless live harness init is ready.',
     `  Profile:       ${session.profileDir}`,
     `  CDP endpoint:  ${session.endpoint}`,
     `  Browser PID:   ${session.browserPid || 'unknown'}`,

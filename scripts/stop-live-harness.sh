@@ -10,11 +10,11 @@ port_pids="$(pgrep -f -- "--remote-debugging-port=$DEBUG_PORT" || true)"
 pids="$(printf "%s\n%s\n" "$profile_pids" "$port_pids" | awk 'NF && !seen[$0]++')"
 
 if [[ -z "$pids" ]]; then
-  echo "No mychart-cli live harness Chrome process found."
+  echo "No foliofen-cli live harness Chrome process found."
   exit 0
 fi
 
-echo "Stopping mychart-cli live harness Chrome process(es):"
+echo "Stopping foliofen-cli live harness Chrome process(es):"
 printf "  %s\n" $pids
 
 while IFS= read -r pid; do

@@ -124,7 +124,7 @@ export async function findLatestExportEndDateFromFilenames({
 
   let latest = '';
   for (const entry of entries) {
-    const match = /^mychart-cli-records-\d{4}-\d{2}-\d{2}-to-(\d{4}-\d{2}-\d{2})-/.exec(entry);
+    const match = /^(?:foliofen-cli|mychart-cli)-records-\d{4}-\d{2}-\d{2}-to-(\d{4}-\d{2}-\d{2})-/.exec(entry);
     if (match && match[1] > latest) latest = match[1];
   }
   return latest;
