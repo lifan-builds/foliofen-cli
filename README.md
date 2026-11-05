@@ -14,19 +14,16 @@ It does not provide medical advice.
 
 ## Try it without a portal account
 
-After installing from source below:
-
 ```bash
-node src/cli.mjs demo
+npx @lifan-builds/foliofen-cli demo
 ```
 
-The demo is deterministic and synthetic. It does not start Chrome, access the
+After npm downloads the package, the demo is deterministic and synthetic. It does not start Chrome, access the
 network, create a browser profile, or write a record store.
 
 ## Install
 
-Node.js 20 or newer and Google Chrome are required. The renamed npm package
-is prepared for release; until it is published, use the source installation below.
+Node.js 20 or newer and Google Chrome are required.
 
 ```bash
 npm install --global @lifan-builds/foliofen-cli
