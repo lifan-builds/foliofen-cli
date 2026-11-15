@@ -1,21 +1,15 @@
 import {
   DEFAULT_ATTACHMENTS_DIR,
-  DEFAULT_POLL_INTERVAL_SECONDS,
   DEFAULT_STORE_PATH,
   DEFAULT_TIMEOUT_SECONDS,
 } from '../core/paths.js';
 import {
   closeBrowserSession,
-  openBrowserSession,
   runPuppeteerDeepSync,
 } from './sync-runner.js';
 import { sleep } from './mychart-auth.js';
 
 export { openBrowserSession } from './sync-runner.js';
-
-export async function openLiveHarnessDashboard(options = {}) {
-  return openBrowserSession(options);
-}
 
 export async function closeLiveHarnessDashboard(options = {}) {
   return closeBrowserSession(options);
@@ -36,7 +30,6 @@ export async function triggerRawDeepSync(page, {
   storePath = DEFAULT_STORE_PATH,
   attachmentsDir = DEFAULT_ATTACHMENTS_DIR,
   timeoutSeconds = DEFAULT_TIMEOUT_SECONDS,
-  pollIntervalSeconds = DEFAULT_POLL_INTERVAL_SECONDS,
   maxTransientRetries = 1,
   onProgress = () => {},
   onRetry = () => {},
@@ -91,7 +84,6 @@ export async function syncRecords({
   storePath = DEFAULT_STORE_PATH,
   attachmentsDir = DEFAULT_ATTACHMENTS_DIR,
   timeoutSeconds = DEFAULT_TIMEOUT_SECONDS,
-  pollIntervalSeconds = DEFAULT_POLL_INTERVAL_SECONDS,
   maxTransientRetries = 1,
   onProgress = () => {},
   onRetry = () => {},
@@ -112,7 +104,6 @@ export async function syncRecords({
     storePath,
     attachmentsDir,
     timeoutSeconds,
-    pollIntervalSeconds,
     maxTransientRetries,
     onProgress,
     onRetry,
