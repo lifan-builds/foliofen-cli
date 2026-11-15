@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { chmod, mkdir, mkdtemp, stat } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -10,9 +10,13 @@ import { promisify } from 'node:util';
 import { writePullState } from '../src/core/agent-export-workflow.js';
 import { buildSyntheticDemo, formatSyntheticDemo } from '../src/core/demo.js';
 import { resolveMyChartPaths } from '../src/core/paths.js';
-import { writeRecordsAgentJsonlExport } from '../src/core/record-exports.js';
+import { writeRecordsMarkdownExport } from '../src/core/record-exports.js';
 import { writePrivateFile } from '../src/core/private-files.js';
 import { JsonMedicalStore } from '../src/storage/json-store.js';
+import {
+  scanPackedFilesForSecrets,
+  scanRepositoryDenylist,
+} from '../scripts/check-release.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -76,7 +80,7 @@ test('medical stores, exports, and pull state use private permissions', async ()
   const statePath = path.join(root, 'state', 'pull.json');
 
   await new JsonMedicalStore({ storePath }).writeStore({ records: [], indexCards: [] });
-  await writeRecordsAgentJsonlExport({ outputPath: exportPath, content: '{"kind":"synthetic"}\n' });
+  await writeRecordsMarkdownExport({ outputPath: exportPath, content: '{"kind":"synthetic"}\n' });
   await writePullState(statePath, { version: 1, scopes: {} });
 
   if (process.platform !== 'win32') {
@@ -129,4 +133,111 @@ test('synthetic demo is deterministic and clearly contains no real patient data'
   });
   assert.equal(cli.stderr, '');
   assert.equal(cli.stdout, `${output}\n`);
+});
+
+test('release repository scan fails closed on unreadable or unexpectedly missing files', async () => {
+  await assert.rejects(
+    scanRepositoryDenylist({
+      rootDir: '/repo',
+      repositoryFiles: ['src/cli.mjs'],
+      denylist: [],
+      readText: async () => {
+        const err = new Error('EACCES: permission denied');
+        err.code = 'EACCES';
+        throw err;
+      },
+    }),
+    /Failed to read repository file src\/cli\.mjs: EACCES/,
+  );
+
+  await assert.rejects(
+    scanRepositoryDenylist({
+      rootDir: '/repo',
+      repositoryFiles: ['src/vanished.js'],
+      deletedTrackedFiles: new Set(),
+      denylist: ['patient-name'],
+      readText: async () => {
+        const err = new Error('ENOENT: no such file');
+        err.code = 'ENOENT';
+        throw err;
+      },
+    }),
+    /Failed to read repository file src\/vanished\.js: ENOENT/,
+  );
+
+  await scanRepositoryDenylist({
+    rootDir: '/repo',
+    repositoryFiles: ['scripts/deleted.mjs', 'README.md'],
+    deletedTrackedFiles: new Set(['scripts/deleted.mjs']),
+    denylist: ['forbidden-phrase'],
+    readText: async (target) => {
+      if (target.endsWith('deleted.mjs')) {
+        const err = new Error('ENOENT: no such file');
+        err.code = 'ENOENT';
+        throw err;
+      }
+      return 'Safe documentation\n';
+    },
+  });
+
+  await assert.rejects(
+    scanRepositoryDenylist({
+      rootDir: '/repo',
+      repositoryFiles: ['README.md'],
+      denylist: ['forbidden-phrase'],
+      readText: async () => 'Contains FORBIDDEN-PHRASE inside text\n',
+    }),
+    /denylisted public text found in README\.md/,
+  );
+});
+
+test('release packed-file scan fails closed on any read error including ENOENT', async () => {
+  for (const code of ['ENOENT', 'EACCES']) {
+    await assert.rejects(
+      scanPackedFilesForSecrets({
+        rootDir: '/repo',
+        packedFiles: [{ path: 'src/cli.mjs' }],
+        readText: async () => {
+          const err = new Error(`${code}: read failure`);
+          err.code = code;
+          throw err;
+        },
+      }),
+      new RegExp(`Failed to read packed file src/cli\\.mjs: ${code}`),
+    );
+  }
+
+  await assert.rejects(
+    scanPackedFilesForSecrets({
+      rootDir: '/repo',
+      packedFiles: [{ path: 'src/cli.mjs' }],
+      readText: async () => 'const hdr = "Authorization: Bearer super-secret-token";\n',
+    }),
+    /credential-like content found in src\/cli\.mjs/,
+  );
+});
+
+test('check-release entrypoint executes checks even when invoked through a symlink', async () => {
+  const tempRoot = await mkdtemp(path.join(tmpdir(), 'mychart-release-symlink-'));
+  const fakeRepo = path.join(tempRoot, 'fake-repo');
+  const scriptsDir = path.join(fakeRepo, 'scripts');
+  await mkdir(scriptsDir, { recursive: true });
+  await writeFile(path.join(fakeRepo, 'package.json'), JSON.stringify({ name: 'wrong-package-name' }));
+
+  const realScript = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'check-release.mjs');
+  const symlinkedScript = path.join(tempRoot, 'check-release-link.mjs');
+  await symlink(realScript, symlinkedScript);
+
+  // If symlink entrypoint detection failed, check-release-link.mjs would exit 0 silently.
+  // Executing inside fakeRepo would only fail if runReleaseCheck actually runs; verify directly on a copy in fakeRepo/scripts invoked via symlink:
+  const repoScript = path.join(scriptsDir, 'check-release.mjs');
+  const { readFile } = await import('node:fs/promises');
+  await writeFile(repoScript, await readFile(realScript, 'utf8'));
+  const binLink = path.join(tempRoot, 'bin-check-release');
+  await symlink(repoScript, binLink);
+
+  await assert.rejects(
+    execFileAsync(process.execPath, [binLink]),
+    /unexpected package name/,
+  );
 });
