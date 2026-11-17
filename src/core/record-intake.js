@@ -92,9 +92,6 @@ export function summarizeSavedRecordQuality(records = []) {
     const substantiveVisitNotes = visitNotes.filter((record) => (
         hasStoredVisitNoteSubstance(`${record.title || ''}\n${record.summary || ''}\n${record.rawText || ''}`)
     ));
-    const shellLikeVisitNotes = visitNotes.filter((record) => (
-        !hasStoredVisitNoteSubstance(`${record.title || ''}\n${record.summary || ''}\n${record.rawText || ''}`)
-    ));
     const recordTypes = records.reduce((counts, record) => {
         const key = record.recordType || 'unknown';
         counts[key] = (counts[key] || 0) + 1;
@@ -105,7 +102,7 @@ export function summarizeSavedRecordQuality(records = []) {
         visitRecords: visitRecords.length,
         visitNotes: visitNotes.length,
         substantiveVisitNotes: substantiveVisitNotes.length,
-        shellLikeVisitNotes: shellLikeVisitNotes.length,
+        shellLikeVisitNotes: visitNotes.length - substantiveVisitNotes.length,
         recordTypes,
     };
 }

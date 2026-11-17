@@ -1,6 +1,10 @@
 import { isVisitDetailSource } from './identity.js';
 
-export const VISIT_NOTE_READY_PATTERN = [
+const VISIT_NOTE_READY_PATTERN = [
+    'preoperative diagnosis',
+    'postoperative diagnosis',
+    'operative findings',
+    'description of (?:the )?procedure',
     'progress notes? by',
     'progress notes? signed by',
     'progress note date of service',

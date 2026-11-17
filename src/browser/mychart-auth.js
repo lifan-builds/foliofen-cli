@@ -84,7 +84,7 @@ export async function switchMyChartProxyContext(browser, {
   throw new Error(result.error || `Could not switch MyChart proxy context to ${patient}.`);
 }
 
-export async function waitForMyChartProxyContext(page, patient, {
+async function waitForMyChartProxyContext(page, patient, {
   timeoutSeconds = 10,
   pollIntervalMs = 500,
 } = {}) {
@@ -180,7 +180,7 @@ export async function waitForMyChartCredentialFields(page, {
   );
 }
 
-export async function fillAndSubmitMyChartLogin(page, { username, password } = {}) {
+async function fillAndSubmitMyChartLogin(page, { username, password } = {}) {
   if (!username || !password) {
     throw new Error('username and password are required.');
   }

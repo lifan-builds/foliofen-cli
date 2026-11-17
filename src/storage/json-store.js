@@ -23,9 +23,9 @@ import {
   summarizeSavedRecordQuality,
 } from '../core/record-intake.js';
 
-export const STORE_VERSION = 1;
+const STORE_VERSION = 1;
 
-export function createEmptyStore(now = new Date().toISOString()) {
+function createEmptyStore(now = new Date().toISOString()) {
   return {
     version: STORE_VERSION,
     updatedAt: now,
@@ -427,7 +427,7 @@ export class JsonMedicalStore {
   }
 }
 
-export class JsonStoreWriteSession {
+class JsonStoreWriteSession {
   constructor(owner, store, { checkpointPages, checkpointMs }) {
     this.owner = owner;
     this.store = store;
@@ -473,4 +473,3 @@ export class JsonStoreWriteSession {
   }
 }
 
-export { summarizeSavedRecordQuality };

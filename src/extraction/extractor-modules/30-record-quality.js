@@ -26,7 +26,7 @@
 
     function hasVisitNoteSubstance(text) {
         const value = text || '';
-        return /\b(?:progress notes? by|progress notes? signed by|progress note date of service|ed provider notes? by|procedure notes? by|telephone encounter by|plan of care by|lactation note by|h&p signed by|admit summary|neuraxial procedure note|chief complaint|history of present illness|reason for consult|urine dip|flank pain|vitals?|reviewed that|patient (?:called|states?|here|presents)|nurse spoke with patient|hospital course|discharge|active medications?|respiratory support|fen assessment|vital signs|physical exam dol|room air|nicu|infant)\b/i.test(value)
+        return /\b(?:preoperative diagnosis|postoperative diagnosis|operative findings|description of (?:the )?procedure|progress notes? by|progress notes? signed by|progress note date of service|ed provider notes? by|procedure notes? by|telephone encounter by|plan of care by|lactation note by|h&p signed by|admit summary|neuraxial procedure note|chief complaint|history of present illness|reason for consult|urine dip|flank pain|vitals?|reviewed that|patient (?:called|states?|here|presents)|nurse spoke with patient|hospital course|discharge|active medications?|respiratory support|fen assessment|vital signs|physical exam dol|room air|nicu|infant)\b/i.test(value)
             || /\b(?:maternal hx|lactation note|assessment|assessment and plan|subjective|objective|procedure|procedure time|indications?|complications?|preprocedure check|performing provider|authorizing provider|vs|medications|plan|instructions?)\s*:/i.test(value);
     }
 

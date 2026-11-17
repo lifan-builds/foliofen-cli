@@ -4,12 +4,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
+import { buildAgentJsonlExport } from '../src/core/agent-jsonl-export.js';
 import {
   assertFreshDeepSync,
-  buildRecordsAgentJsonlExport,
   buildRecordsMarkdownExport,
-  exportLatestDay,
-  exportRecordsMarkdown,
   filterRecordCards,
 } from '../src/core/record-exports.js';
 import {
@@ -24,7 +22,7 @@ import {
 import { inspectMyChartLoginState } from '../src/browser/sync-runner.js';
 import {
   isTransientBrowserFrameError,
-  syncRecords,
+  triggerRawDeepSync,
 } from '../src/browser/sync-api.js';
 import {
   openMyChartAccessLoginIfNeeded,
@@ -541,113 +539,7 @@ test('agent export helpers filter records and preserve dashboard Markdown format
   assert.doesNotMatch(exportDownload.content, /Progress Note/);
 });
 
-test('exportLatestDay filters exact patient and categories before building Markdown', () => {
-  const patient = { key: 'demo-child', label: 'Demo Child' };
-  const cards = [
-    {
-      id: 'visit-1',
-      patient,
-      category: 'visits',
-      recordType: 'visit-note',
-      title: 'Progress Notes',
-      date: '2026-05-28',
-      snippet: 'Respiratory support unchanged.',
-      sourceUrl: 'https://example.test/visit',
-    },
-    {
-      id: 'lab-1',
-      patient,
-      category: 'test-results',
-      recordType: 'test-result',
-      title: 'CBC W/DIFFERENTIAL',
-      date: 'May 28, 2026',
-      snippet: 'White Blood Cells high',
-      sourceUrl: 'https://example.test/lab',
-    },
-    {
-      id: 'older-lab',
-      patient,
-      category: 'test-results',
-      recordType: 'test-result',
-      title: 'Older CBC',
-      date: '2026-05-27',
-      snippet: 'Older result',
-      sourceUrl: 'https://example.test/old-lab',
-    },
-    {
-      id: 'other',
-      patient: { key: 'other', label: 'Other Patient' },
-      category: 'test-results',
-      recordType: 'test-result',
-      title: 'Other CBC',
-      date: '2026-05-28',
-      snippet: 'Other result',
-      sourceUrl: 'https://example.test/other',
-    },
-  ];
-  const records = [
-    {
-      id: 'visit-1',
-      category: 'visits',
-      clinicalText: 'Respiratory support unchanged.',
-      sourceUrl: 'https://example.test/visit',
-    },
-    {
-      id: 'lab-1',
-      category: 'test-results',
-      rawText: [
-        'CBC W/DIFFERENTIAL',
-        'Collected on May 28, 2026 5:30 AM',
-        'White Blood Cells',
-        'Normal range: 3.4 - 10.8 K/uL',
-        'Value 12.3High K/uL',
-      ].join('\n'),
-      sourceUrl: 'https://example.test/lab',
-    },
-    {
-      id: 'older-lab',
-      category: 'test-results',
-      rawText: 'Older result',
-      sourceUrl: 'https://example.test/old-lab',
-    },
-    {
-      id: 'other',
-      category: 'test-results',
-      rawText: 'Other result',
-      sourceUrl: 'https://example.test/other',
-    },
-  ];
-
-  const exportDownload = exportLatestDay({
-    cards,
-    records,
-    patientLabelExact: 'Demo Child',
-    categories: ['visits', 'test-results'],
-    generatedAt: '2026-05-28T12:00:00.000Z',
-  });
-
-  assert.equal(exportDownload.latestDate, '2026-05-28');
-  assert.deepEqual(exportDownload.exportedCards.map((card) => card.id), ['visit-1', 'lab-1']);
-  assert.match(exportDownload.content, /- Category: Test Results/);
-  assert.match(exportDownload.content, /### Result Data/);
-  assert.match(exportDownload.content, /White Blood Cells/);
-  assert.doesNotMatch(exportDownload.content, /Other CBC|Older CBC/);
-});
-
-test('exportRecordsMarkdown delegates to date-range Markdown export', async () => {
-  const exportDownload = await exportRecordsMarkdown({
-    cards: [{ id: 'one', category: 'visits', title: 'Visit', date: '2026-05-28' }],
-    records: [{ id: 'one', category: 'visits', rawText: 'Visit details' }],
-    startDate: '2026-05-28',
-    endDate: '2026-05-28',
-    generatedAt: '2026-05-28T12:00:00.000Z',
-  });
-
-  assert.equal(exportDownload.exportedCards.length, 1);
-  assert.match(exportDownload.content, /Visit details/);
-});
-
-test('buildRecordsAgentJsonlExport exposes filtered records as agent JSONL', () => {
+test('buildAgentJsonlExport exposes filtered records as agent JSONL', () => {
   const patient = { key: 'baby', label: 'Demo Child' };
   const otherPatient = { key: 'other', label: 'Other Patient' };
   const cards = [
@@ -691,7 +583,7 @@ test('buildRecordsAgentJsonlExport exposes filtered records as agent JSONL', () 
     category: 'test-results',
   });
 
-  const exportDownload = buildRecordsAgentJsonlExport({
+  const exportDownload = buildAgentJsonlExport({
     cards: filtered.cards,
     records: filtered.recordsById,
     startDate: '2026-05-23',
@@ -706,6 +598,6 @@ test('buildRecordsAgentJsonlExport exposes filtered records as agent JSONL', () 
   assert.equal(lines[2].text, 'ALT\nYour value is 113 U/L');
 });
 
-test('syncRecords requires a Puppeteer browser or page', async () => {
-  await assert.rejects(() => syncRecords({ categories: ['test-results'] }), /browser or page/);
+test('triggerRawDeepSync requires a Puppeteer browser or page', async () => {
+  await assert.rejects(() => triggerRawDeepSync(null, { categories: ['test-results'] }), /browser or page/);
 });

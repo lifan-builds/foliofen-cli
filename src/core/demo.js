@@ -1,4 +1,4 @@
-import { buildRecordsAgentJsonlExport } from './record-exports.js';
+import { buildAgentJsonlExport } from './agent-jsonl-export.js';
 
 const GENERATED_AT = '2026-01-15T12:00:00.000Z';
 
@@ -38,7 +38,7 @@ export function buildSyntheticDemo() {
     date: record.date,
     sourceUrl: record.sourceUrl,
   }));
-  const exported = buildRecordsAgentJsonlExport({
+  const exported = buildAgentJsonlExport({
     cards,
     records,
     all: true,

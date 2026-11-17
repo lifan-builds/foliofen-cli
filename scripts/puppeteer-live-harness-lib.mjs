@@ -3,8 +3,8 @@ import path from 'node:path';
 import { DEFAULT_LIVE_HARNESS_PORT } from './live-harness-lib.mjs';
 
 export const DEFAULT_MYCHART_URL = 'https://mychart.example.org/mychart/Home';
-export const DEFAULT_PROFILE_RELATIVE_PATH = 'browser_profiles/awesome-mychart-live';
-export const DEFAULT_WINDOW_SIZE = { width: 1280, height: 900 };
+const DEFAULT_PROFILE_RELATIVE_PATH = 'browser_profiles/awesome-mychart-live';
+const DEFAULT_WINDOW_SIZE = { width: 1280, height: 900 };
 
 export function resolveHarnessPaths({
   rootDir,
