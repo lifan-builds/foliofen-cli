@@ -89,7 +89,7 @@ export async function runReleaseCheck({ rootDir = root, env = process.env } = {}
   for (const file of pack.files) {
     const topLevel = file.path.split('/', 1)[0];
     assert(allowedTopLevel.has(topLevel), `package contains non-release path: ${file.path}`);
-    assert(!/(?:^|\/)(?:\.trellis|\.agents|\.claude|\.codex|tests|browser_profiles|\.awesome-mychart)(?:\/|$)/.test(file.path),
+    assert(!/(?:^|\/)(?:\.agents|\.claude|\.codex|\.local|tests|browser_profiles|\.awesome-mychart)(?:\/|$)/.test(file.path),
       `package contains private/development path: ${file.path}`);
   }
 

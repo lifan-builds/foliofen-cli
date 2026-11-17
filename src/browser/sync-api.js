@@ -4,16 +4,11 @@ import {
   DEFAULT_TIMEOUT_SECONDS,
 } from '../core/paths.js';
 import {
-  closeBrowserSession,
   runPuppeteerDeepSync,
 } from './sync-runner.js';
 import { sleep } from './mychart-auth.js';
 
-export { openBrowserSession } from './sync-runner.js';
-
-export async function closeLiveHarnessDashboard(options = {}) {
-  return closeBrowserSession(options);
-}
+export { closeBrowserSession, openBrowserSession } from './sync-runner.js';
 
 export async function triggerRawDeepSync(page, {
   browser,
@@ -68,48 +63,6 @@ export async function triggerRawDeepSync(page, {
   throw new Error('Deep sync failed after retry.');
 }
 
-export async function syncRecords({
-  page,
-  browser,
-  session = {},
-  force = false,
-  categories,
-  seedUrls,
-  maxRecords,
-  maxPages,
-  maxBroadPages,
-  exhaustive = false,
-  requireActivePatient = '',
-  profileDir,
-  storePath = DEFAULT_STORE_PATH,
-  attachmentsDir = DEFAULT_ATTACHMENTS_DIR,
-  timeoutSeconds = DEFAULT_TIMEOUT_SECONDS,
-  maxTransientRetries = 1,
-  onProgress = () => {},
-  onRetry = () => {},
-} = {}) {
-  if (!page && !browser) throw new Error('syncRecords requires a Puppeteer browser or page.');
-  return triggerRawDeepSync(page, {
-    browser,
-    session,
-    force,
-    categories,
-    seedUrls,
-    maxRecords,
-    maxPages,
-    maxBroadPages,
-    exhaustive,
-    requireActivePatient,
-    profileDir,
-    storePath,
-    attachmentsDir,
-    timeoutSeconds,
-    maxTransientRetries,
-    onProgress,
-    onRetry,
-  });
-}
-
 export function isTransientBrowserFrameError(error) {
   return /(?:detached\s+Frame|frame\s+was\s+detached|execution context was destroyed|target closed)/i
     .test(String(error?.message || error || ''));
@@ -119,7 +72,7 @@ function getBrowserFromPage(page) {
   if (!page || typeof page.browser !== 'function') return null;
   try {
     return page.browser();
-  } catch (error) {
+  } catch {
     return null;
   }
 }

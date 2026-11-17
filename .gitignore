@@ -28,7 +28,7 @@ data/
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 node_modules/
-.tools/
+.local/
 .pytest_cache/
 .coverage
 htmlcov/

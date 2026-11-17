@@ -3,9 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const AWESOME_MYCHART_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const AWESOME_MYCHART_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-export function getPlatformDataHome({
+function getPlatformDataHome({
   env = process.env,
   platform = process.platform,
   homeDir = os.homedir(),

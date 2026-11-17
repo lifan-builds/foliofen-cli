@@ -7,7 +7,7 @@ export function hashText(value) {
     return (hash >>> 0).toString(36);
 }
 
-export function isLikelyPatientName(value = '') {
+function isLikelyPatientName(value = '') {
     const name = String(value || '').trim();
     if (!name) return false;
     if (!/[a-z]/.test(name)) return false;
@@ -47,10 +47,6 @@ export function normalizePatient(value) {
         label: value.label || (relationship ? `${name} (${relationship})` : name),
         relationship,
     };
-}
-
-export function patientSyncKey(patient) {
-    return patient?.key || 'unknown-patient';
 }
 
 export function createSourceUrlKey(sourceUrl = '') {

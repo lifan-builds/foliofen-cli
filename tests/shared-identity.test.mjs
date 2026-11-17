@@ -5,7 +5,6 @@ import {
   createSourceUrlKey,
   createVisitCsnKey,
   normalizePatient,
-  patientSyncKey,
 } from '../src/core/identity.js';
 
 test('normalizePatient creates stable keys from name and relationship', () => {
@@ -40,9 +39,4 @@ test('source identity removes hash fragments and groups visit csn pages', () => 
     createVisitCsnKey('https://example.test/mychart/app/visits/past-details?csn=abc&pageMode=notesfirst'),
     'https://example.test/visit-csn/abc',
   );
-});
-
-test('patientSyncKey uses the explicit unknown-patient fallback', () => {
-  assert.equal(patientSyncKey(null), 'unknown-patient');
-  assert.equal(patientSyncKey({ key: 'patient-one' }), 'patient-one');
 });

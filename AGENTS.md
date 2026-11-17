@@ -1,5 +1,5 @@
 # mychart-cli guidance
 
-- Keep the harness local-first and preserve patient-data, credential, browser-profile, authenticated-state, screenshot, export, and runtime privacy boundaries.
-- Read the relevant privacy, browser-boundary, and verification guidance before changing those areas; do not put personal data into tracked changes or agent context.
-- Run `npm test` for repository changes. Deterministic tests do not authorize live browser, authentication, sync, export, screenshot, or portal checks.
+- Keep `mychart-cli` local-first: export only records visible in the dedicated Chrome/Puppeteer profile (`PRIVACY.md`, `docs/live-harness.md`), with zero backend, telemetry, or embedded LLM/clinical interpretation.
+- Never include patient data, credentials, `.env` values, browser profiles, `.awesome-mychart/` stores, screenshots, authenticated URLs, or real exports in Git or agent output.
+- Verify repository changes with `npm test` and `npm run check:release` (synthetic fixtures only; deterministic checks do not authorize live portal, login, sync, or export runs).
