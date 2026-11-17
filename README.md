@@ -5,6 +5,9 @@ records that you can already view in a MyChart® patient portal. It uses a dedic
 Chrome profile, keeps credentials and records on your computer, and exports
 Markdown or JSONL for workflows you control.
 
+- **Overview & Custody Architecture:** [https://clifan.com/foliofen-cli/](https://clifan.com/foliofen-cli/)
+- **npm Package:** [`@lifan-builds/foliofen-cli`](https://www.npmjs.com/package/@lifan-builds/foliofen-cli)
+
 This is a public beta for macOS and Google Chrome. MyChart portals differ, so a
 workflow that works on one hospital's portal may need adaptation on another.
 MyChart is a registered trademark of Epic Systems Corporation. Foliofen is not
