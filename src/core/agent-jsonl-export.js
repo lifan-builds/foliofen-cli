@@ -5,9 +5,9 @@ import {
   summarizeRecordDisplayQuality,
 } from './record-browser.js';
 
-export const AGENT_JSONL_SCHEMA_VERSION = 1;
-export const DEFAULT_AGENT_CHUNK_SIZE = 3000;
-export const DEFAULT_AGENT_CHUNK_OVERLAP = 300;
+const AGENT_JSONL_SCHEMA_VERSION = 1;
+const DEFAULT_AGENT_CHUNK_SIZE = 3000;
+const DEFAULT_AGENT_CHUNK_OVERLAP = 300;
 
 export function buildAgentJsonlExport({
   generatedAt = new Date().toISOString(),
@@ -27,7 +27,7 @@ export function buildAgentJsonlExport({
   const exportedCards = all
     ? cards
     : filterCardsByRecordDateRange(cards, recordsById, { startDate, endDate });
-  const deduped = dedupeExportCards(exportedCards, recordsById, { startDate, endDate });
+  const deduped = dedupeExportCards(exportedCards, recordsById);
   const recordEntries = deduped.cards.map((card) => createAgentRecordEntry({
     card,
     record: recordsById.get(card.id) || {},
@@ -114,16 +114,13 @@ function createAgentRecordEntry({
   return { recordLine, chunkLines };
 }
 
-function dedupeExportCards(cards = [], recordsById = new Map(), {
-  startDate = '',
-  endDate = '',
-} = {}) {
+function dedupeExportCards(cards = [], recordsById = new Map()) {
   const seen = new Map();
   const dedupedCards = [];
   const duplicateKeys = {};
   for (const card of cards) {
     const record = recordsById.get(card.id) || {};
-    const key = duplicateKeyForCard(card, record, { startDate, endDate });
+    const key = duplicateKeyForCard(card, record);
     if (!key) {
       dedupedCards.push(card);
       continue;
@@ -135,7 +132,8 @@ function dedupeExportCards(cards = [], recordsById = new Map(), {
       continue;
     }
     duplicateKeys[key] = (duplicateKeys[key] || 1) + 1;
-    const replacement = chooseBetterDuplicate(existing, { card, record });
+    const candidate = { card, record };
+    const replacement = compareDuplicateCandidates(candidate, existing) > 0 ? candidate : existing;
     if (replacement.card !== existing.card) {
       const index = dedupedCards.findIndex((item) => item.id === existing.card.id);
       if (index >= 0) dedupedCards[index] = card;
@@ -182,10 +180,6 @@ function canonicalExportSource(value = '') {
   } catch {
     return String(value);
   }
-}
-
-function chooseBetterDuplicate(left, right) {
-  return compareDuplicateCandidates(right, left) > 0 ? right : left;
 }
 
 function compareDuplicateCandidates(left, right) {

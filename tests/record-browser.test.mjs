@@ -3,8 +3,6 @@ import test from 'node:test';
 
 import {
   createRecordBrowserState,
-  getCategoryOptions,
-  getPatientOptions,
   getRecordDisplayText,
   labelize,
   summarizeRecordDisplayQuality,
@@ -56,18 +54,7 @@ test('createRecordBrowserState counts all matches when the visible list is limit
   assert.equal(state.filteredCards.length, 2);
 });
 
-test('record browser option helpers produce stable labels', () => {
-  const cards = [
-    { patient: patientTwo, category: 'test-results' },
-    { patient: patientOne, category: 'visits' },
-    { patient: patientOne, category: 'visits' },
-  ];
-
-  assert.deepEqual(getPatientOptions(cards).map((patient) => patient.label), [
-    'Patient One',
-    'Patient Two',
-  ]);
-  assert.deepEqual(getCategoryOptions(cards), ['test-results', 'visits']);
+test('labelize formats hyphenated category slugs', () => {
   assert.equal(labelize('test-results'), 'Test Results');
 });
 

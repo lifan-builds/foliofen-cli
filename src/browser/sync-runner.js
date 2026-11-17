@@ -5,6 +5,7 @@ import path from 'node:path';
 import puppeteer from 'puppeteer-core';
 
 import { collectPriorityDetailLinks } from '../core/deep-sync-links.js';
+import { createSourceUrlKey } from '../core/identity.js';
 import {
   canonicalClinicalRouteIdentity,
   classifySyncLink,
@@ -69,7 +70,7 @@ export async function findMyChartPage(browser, session = {}) {
   throw new Error('No MyChart page is available in the live harness.');
 }
 
-export async function activateAuthenticatedMyChartTab(browser, {
+async function activateAuthenticatedMyChartTab(browser, {
   session = {},
   timeoutSeconds = DEFAULT_TIMEOUT_SECONDS,
 } = {}) {
@@ -157,7 +158,7 @@ export async function inspectMyChartLoginState(page) {
   });
 }
 
-export async function extractPage(page) {
+async function extractPage(page) {
   await ensureExtractorInstalled(page);
   const { extraction, noteHeader } = await page.evaluate(() => {
     const result = globalThis.MyChartExtractorCore.extractRecordsFromDocument(document, location);
@@ -170,10 +171,12 @@ export async function extractPage(page) {
     const headerLines = (start >= 0 ? lines.slice(start, start + 10) : lines.slice(0, 10))
       .filter((line) => (
         /^Notes from Care Team$/i.test(line)
-        || /\b(?:Daily Progress Note|Consulting Provider Notes?|Progress Notes?|Provider Notes?|Procedure Notes?|Plan of Care|Lactation Note|History and Physical|H&P)\b/i.test(line)
+        || /\b(?:Discharge Summary|Operation Note|Daily Progress Note|Consulting Provider Notes?|Progress Notes?|Provider Notes?|Procedure Notes?|Plan of Care|Lactation Note|History and Physical|H&P)\b/i.test(line)
         || /^Signed\s+/i.test(line)
         || /^Filed\s+/i.test(line)
       ));
+    const encounterHeading = document.querySelector('h1')?.innerText?.trim() || '';
+    if (/^Appointment - /i.test(encounterHeading)) headerLines.unshift(encounterHeading);
     return { extraction: result, noteHeader: headerLines.join('\n').trim() };
   });
   if (extraction?.page?.category !== 'visits') return extraction;
@@ -197,11 +200,6 @@ async function ensureExtractorInstalled(page) {
   if (!installed) await page.evaluate((source) => Function(source)(), EXTRACTOR_SOURCE);
 }
 
-async function ensureExtractorInstalledInFrame(frame) {
-  const installed = await frame.evaluate(() => Boolean(globalThis.MyChartExtractorCore));
-  if (!installed) await frame.evaluate((source) => Function(source)(), EXTRACTOR_SOURCE);
-}
-
 async function extractVisitFrames(page, {
   sourceUrl,
   patient,
@@ -216,7 +214,7 @@ async function extractVisitFrames(page, {
     .slice(0, MAX_VISIT_NOTE_FRAMES);
   const extractions = [];
   for (const frame of frames) {
-    await ensureExtractorInstalledInFrame(frame).catch(() => {});
+    await ensureExtractorInstalled(frame).catch(() => {});
     const result = await frame.evaluate((topSourceUrl, topPatient, topNoteHeader) => {
       const collectDeepText = (rootNode) => {
         const pieces = [];
@@ -309,7 +307,7 @@ function extractSignedHeaderTitle(header = '') {
     .map((line) => line.trim())
     .filter(Boolean);
   const title = lines.find((line) => (
-    /\b(?:Daily Progress Note|Consulting Provider Notes?|Progress Notes?|Provider Notes?|Procedure Notes?|Plan of Care|Lactation Note|History and Physical|H&P)\b/i.test(line)
+    /\b(?:Discharge Summary|Operation Note|Daily Progress Note|Consulting Provider Notes?|Progress Notes?|Provider Notes?|Procedure Notes?|Plan of Care|Lactation Note|History and Physical|H&P)\b/i.test(line)
     && !/^Notes from Care Team$/i.test(line)
   ));
   return String(title || '')
@@ -318,7 +316,7 @@ function extractSignedHeaderTitle(header = '') {
 }
 
 function isGenericVisitNoteTitle(title = '') {
-  return /^(?:Visit|Chief Complaint:?|Chief Complaint\/Reason for Admission|History of Present Illness:?|Hospital course in brief:?|,)/i
+  return /^(?:Visit|Chief Complaint:?|Chief Complaint\/Reason for Admission|History of Present Illness:?|Hospital course(?: in brief)?:?|,)/i
     .test(String(title || '').trim());
 }
 
@@ -343,13 +341,14 @@ function createIndexCard(record) {
 }
 
 export function enrichVisitNoteFromHeader(record = {}, noteHeader = '') {
-  const headerDate = extractSignedHeaderDate(noteHeader);
-  const headerTitle = extractSignedHeaderTitle(noteHeader);
-  if (record.recordType !== 'visit-note' || (!headerDate && !headerTitle)) return record;
+  const encounter = String(noteHeader).match(/^Appointment - ((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},\s+\d{4})[^\n]*/im);
+  const headerDate = extractSignedHeaderDate(noteHeader) || encounter?.[1] || '';
+  const headerTitle = extractSignedHeaderTitle(noteHeader) || encounter?.[0] || '';
+  if (!['visit-note', 'visit'].includes(record.recordType) || (!headerDate && !headerTitle)) return record;
   const shouldUseHeaderDate = Boolean(headerDate)
-    && (!record.date || isGenericVisitNoteTitle(record.title));
+    && (!record.date || isGenericVisitNoteTitle(record.title) || /^(?:Discharge Summary|Operation Note)/i.test(headerTitle));
   const shouldUseHeaderTitle = Boolean(headerTitle)
-    && (!record.title || isGenericVisitNoteTitle(record.title));
+    && (!record.title || isGenericVisitNoteTitle(record.title) || /^(?:Discharge Summary|Operation Note)/i.test(headerTitle));
 
   if (!shouldUseHeaderDate && !shouldUseHeaderTitle) return record;
 
@@ -409,7 +408,7 @@ async function gotoWithFallback(page, target) {
   let lastError = null;
   for (const url of urls) {
     try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await page.goto(url, { waitUntil: target.category === 'visits' ? 'networkidle2' : 'domcontentloaded', timeout: 60000 });
       await waitForRouteReady(page, target.category);
       return url;
     } catch (error) {
@@ -432,6 +431,69 @@ async function waitForRouteReady(page, category = '') {
   await page.waitForNetworkIdle({ idleTime: 200, timeout: 2000 }).catch(() => {});
 }
 
+// Resolve portal-owned click handlers instead of guessing encrypted encounter URLs.
+export async function collectVisitCardLinks(page, { beforeNavigation = () => {} } = {}) {
+  if (!/\/visits\/?$/i.test(new URL(page.url()).pathname)) return [];
+  const listUrl = page.url();
+  const links = [];
+  const seen = new Set();
+  for (let batch = 0; batch < 50; batch += 1) {
+    const cards = await page.$$eval('[role="link"][data-id]', (elements) => elements
+      .filter((e) => /view (?:clinical notes|visit details|after visit summary)/i.test(e.innerText || ''))
+      .map((e) => ({ id: e.getAttribute('data-id'), index: e.getAttribute('data-index'), text: e.innerText, className: e.className }))
+      .sort((a, b) => Number(/clinical notes/i.test(b.text)) - Number(/clinical notes/i.test(a.text)))
+      .filter((card, index, all) => index === all.findIndex((other) => other.index === card.index)));
+    for (const card of cards) {
+      const key = card.index;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      beforeNavigation();
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }),
+        page.evaluate((item) => {
+          const element = [...document.querySelectorAll('[role="link"][data-id]')]
+            .find((e) => e.getAttribute('data-id') === item.id && e.getAttribute('data-index') === item.index && e.className === item.className);
+          if (!element) throw new Error('Visit card disappeared during discovery');
+          element.click();
+        }, card),
+      ]);
+      const href = page.url();
+      if (new URL(href).origin !== new URL(listUrl).origin
+        || !/\/(?:app\/visits\/past-details|visits\/visitdetails)/i.test(new URL(href).pathname)) {
+        throw new Error('Visit card did not open a supported encounter');
+      }
+      links.push({ text: card.text, href });
+      beforeNavigation();
+      await page.goBack({ waitUntil: 'networkidle2', timeout: 15000 });
+      // Full-page back navigation can reset the expanded list to its first batch.
+      for (let restore = 0; restore < batch; restore += 1) {
+        const restored = await page.$$eval('[role="link"][data-index]', (elements, lastIndex) =>
+          elements.some((e) => e.getAttribute('data-index') === lastIndex), cards.at(-1).index);
+        if (restored) break;
+        if (!await loadMoreVisits(page, beforeNavigation)) throw new Error('Visit list lost expanded entries');
+      }
+    }
+    if (!await loadMoreVisits(page, beforeNavigation)) return links;
+  }
+  throw new Error('Visit discovery pagination limit reached');
+}
+
+async function loadMoreVisits(page, beforeNavigation) {
+  beforeNavigation();
+  const count = await page.$$eval('[role="link"][data-id]', (elements) => elements.length);
+  const more = await page.evaluate(() => {
+    const button = [...document.querySelectorAll('a,button,[role="button"]')]
+      .find((e) => /load more past visits/i.test(e.innerText || '') && e.getClientRects().length);
+    if (!button) return false;
+    button.click();
+    return true;
+  });
+  if (!more) return false;
+  await page.waitForFunction((previous) => document.querySelectorAll('[role="link"][data-id]').length > previous,
+    { timeout: 15000 }, count);
+  return true;
+}
+
 async function openVisitClinicalNotesIfPresent(page) {
   const clicked = await page.evaluate(() => {
     const candidate = [...document.querySelectorAll('a, button, [role="link"], [role="button"]')]
@@ -447,16 +509,6 @@ async function openVisitClinicalNotesIfPresent(page) {
   await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {});
   await waitForRouteReady(page, 'visits');
   return true;
-}
-
-function normalizeUrlKey(url = '') {
-  try {
-    const parsed = new URL(url);
-    parsed.hash = '';
-    return parsed.href;
-  } catch {
-    return String(url || '');
-  }
 }
 
 function getPriorityDetailCoverageKey(url = '', category = '') {
@@ -475,7 +527,7 @@ function getPriorityDetailCoverageKey(url = '', category = '') {
     return ['visits', csn, hnoId, hnoDat].join('|');
   }
 
-  if (category === 'test-results') return normalizeUrlKey(url);
+  if (category === 'test-results') return createSourceUrlKey(url);
 
   return '';
 }
@@ -484,7 +536,8 @@ export function buildPriorityDetailCoverage(records = []) {
   const coverage = new Set();
   for (const record of records || []) {
     if (record?.category === 'visits'
-      && (record?.recordType !== 'visit-note' || isGenericVisitNoteTitle(record?.title || ''))) {
+      && (record?.recordType !== 'visit-note' || isGenericVisitNoteTitle(record?.title || '')
+        || String(record?.rawText || '').length < 200)) {
       continue;
     }
     if (record?.category === 'test-results'
@@ -505,7 +558,7 @@ function recordHasDownloadedAttachment(record = {}) {
 
 function isSelfHashLink(href = '', sourceUrl = '') {
   if (!href || !sourceUrl) return false;
-  return normalizeUrlKey(href) === normalizeUrlKey(sourceUrl)
+  return createSourceUrlKey(href) === createSourceUrlKey(sourceUrl)
     && /#$/.test(String(href));
 }
 
@@ -575,15 +628,17 @@ function enqueueExtractionLinks({
     if (patientContextToken && classification.routeClass === 'proxy-switch') continue;
     if (classification.admission === 'rejected') continue;
     admissibleCount += 1;
-    const key = link.identityHash || normalizeUrlKey(link.url);
+    const key = link.identityHash || createSourceUrlKey(link.url);
     if (seen.has(key)) continue;
     seen.add(key);
     const legacyCoverageKey = getPriorityDetailCoverageKey(link.url, link.category);
     // Patient-scoped canonical coverage is authoritative once a context token is
     // available. Legacy URL coverage is intentionally rebuilt because it cannot
     // prove which proxy context produced the stored record.
-    const hasStoredRecord = Boolean(canonicalCoverage[key])
-      || (!patientContextToken && legacyCoverageKey ? priorityDetailCoverage.has(legacyCoverageKey) : false);
+    // A visited note URL is not proof that its asynchronously loaded body was saved.
+    const hasStoredRecord = (Boolean(canonicalCoverage[key])
+      || (!patientContextToken && legacyCoverageKey ? priorityDetailCoverage.has(legacyCoverageKey) : false))
+      && (link.category !== 'visits' || priorityDetailCoverage.has(legacyCoverageKey));
     const queued = {
       category: link.category,
       label: `${link.category} ${classification.routeClass}`,
@@ -657,31 +712,26 @@ function createSeedSyncTargets(seedUrls = [], {
     .filter(Boolean);
 }
 
-export function shouldVisitSyncTarget(target = {}, {
-  force = false,
-  visitedUrls = {},
-} = {}) {
-  if (force) return true;
-  if ((target.priorityDetail || target.broadCandidate) && target.hasStoredRecord) return false;
-  const key = normalizeUrlKey(target.url);
-  if (!visitedUrls[key]) return true;
-  if (target.priorityDetail || target.broadCandidate) return true;
-  return Boolean(target.refreshOnIncremental);
+function isVisitContainer(target) {
+  if (target.category !== 'visits') return false;
+  try {
+    return /\/(?:app\/visits\/past-details|visits\/visitdetails)/i.test(new URL(target.url).pathname);
+  } catch { return false; }
 }
 
 export function getSyncSkipReason(target = {}, {
   force = false,
   visitedUrls = {},
 } = {}) {
-  if (force) return '';
+  if (force || isVisitContainer(target)) return '';
   if ((target.priorityDetail || target.broadCandidate) && target.hasStoredRecord) return 'covered';
-  if (visitedUrls[normalizeUrlKey(target.url)] && !(target.priorityDetail || target.broadCandidate || target.refreshOnIncremental)) {
+  if (visitedUrls[createSourceUrlKey(target.url)] && !(target.priorityDetail || target.broadCandidate || target.refreshOnIncremental)) {
     return 'visited';
   }
   return '';
 }
 
-export async function getDeepSyncTargetsFromPage(page, { categories } = {}) {
+async function getDeepSyncTargetsFromPage(page, { categories } = {}) {
   await ensureExtractorInstalled(page);
   const targets = await page.evaluate(() => {
     return globalThis.MyChartExtractorCore.getDeepSyncTargets(location.href, document);
@@ -756,7 +806,7 @@ export async function runPuppeteerDeepSync({
   }))].sort((a, b) => (a.priority || 10) - (b.priority || 10));
   const queue = [];
   for (const target of initialTargets) {
-    const key = target.canonicalKey || normalizeUrlKey(target.url);
+    const key = target.canonicalKey || createSourceUrlKey(target.url);
     if (seen.has(key)) continue;
     seen.add(key);
     queue.push(target);
@@ -868,7 +918,7 @@ export async function runPuppeteerDeepSync({
       if (target.broadCandidate && status.broadPagesAttempted >= Number(maxBroadPages)) {
         status.completionReason = 'max_broad_pages'; status.truncated = true; break;
       }
-      const key = target.canonicalKey || normalizeUrlKey(target.url);
+      const key = target.canonicalKey || createSourceUrlKey(target.url);
       const skipReason = getSyncSkipReason(target, { force, visitedUrls });
       if (skipReason) {
         status.skippedTargets[skipReason] = (status.skippedTargets[skipReason] || 0) + 1;
@@ -881,9 +931,26 @@ export async function runPuppeteerDeepSync({
         let started = Date.now();
         await gotoWithFallback(worker, target);
         addTiming('navigation', started);
-        if (target.category === 'visits') await openVisitClinicalNotesIfPresent(worker);
+        const visitCardLinks = target.category === 'visits' ? await collectVisitCardLinks(worker, {
+          beforeNavigation() {
+            const reason = abortRequested ? 'aborted'
+              : Number.isFinite(Number(maxPages)) && status.pagesVisited + 1 >= Number(maxPages) ? 'max_pages' : '';
+            if (reason) {
+              const error = new Error('Visit discovery stopped at crawl boundary');
+              error.discoveryStopReason = reason;
+              throw error;
+            }
+            status.pagesVisited += 1;
+            status.navigatedRouteCounts['visit-discovery-action'] = (status.navigatedRouteCounts['visit-discovery-action'] || 0) + 1;
+            onProgress({ ...status, errors: status.errors.map((error) => error.stage) });
+          },
+        }) : [];
+        if (target.category === 'visits' && !/\/visits\/?$/i.test(new URL(worker.url()).pathname)) {
+          await openVisitClinicalNotesIfPresent(worker);
+        }
         started = Date.now();
         const extraction = await enrichExternalScanAttachments(worker, await extractPage(worker), { attachmentsDir });
+        extraction.links = [...(extraction.links || []), ...visitCardLinks];
         addTiming('extraction', started);
         started = Date.now();
         const saveResult = await writeSession.mergeExtractedPage(extraction);
@@ -897,7 +964,7 @@ export async function runPuppeteerDeepSync({
         for (const reason of Object.keys(status.deletionReasons)) {
           status.deletionReasons[reason] += saveResult.deletionReasons?.[reason] || 0;
         }
-        visitedUrls[normalizeUrlKey(target.url)] = new Date().toISOString();
+        visitedUrls[createSourceUrlKey(target.url)] = new Date().toISOString();
         if (target.priorityDetail || target.broadCandidate) canonicalCoverage[key] = new Date().toISOString();
         const linkEvidence = enqueueExtractionLinks({
           queue,
@@ -943,6 +1010,11 @@ export async function runPuppeteerDeepSync({
         status.pagesPlanned = Math.max(status.pagesPlanned, status.pagesVisited + queue.length + exhaustiveCandidates.length);
         await persistRun({ checkpointIfDue: true });
       } catch (error) {
+        if (error.discoveryStopReason) {
+          status.completionReason = error.discoveryStopReason;
+          status.truncated = true;
+          break;
+        }
         const stage = 'page';
         status.errors.push({ stage, category: target.category || 'unknown', message: error.name || 'Error' });
         status.errorStages[stage] = (status.errorStages[stage] || 0) + 1;

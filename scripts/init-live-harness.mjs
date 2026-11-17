@@ -11,6 +11,7 @@ import {
 import {
   launchLiveHarness,
   openMyChartPage,
+  waitForBrowserDisconnect,
 } from './launch-live-harness.mjs';
 import { validateLiveHarness } from './validate-live-harness.mjs';
 
@@ -91,18 +92,7 @@ async function main() {
     browser = result.browser;
     if (headless) printHeadlessInitSummary(result);
     else printInitSummary(result);
-
-    const close = async () => {
-      await browser?.close();
-      process.exit(0);
-    };
-
-    process.once('SIGINT', close);
-    process.once('SIGTERM', close);
-
-    await new Promise((resolve) => {
-      browser.on('disconnected', resolve);
-    });
+    await waitForBrowserDisconnect(browser);
   } catch (error) {
     await browser?.close();
     console.error(error.message);

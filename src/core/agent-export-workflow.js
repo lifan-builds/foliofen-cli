@@ -13,18 +13,16 @@ import {
   getRecentClinicalDateRange,
   normalizeClinicalDateForRange,
 } from './clinical-dates.js';
+import { buildAgentJsonlExport } from './agent-jsonl-export.js';
 import {
   assertFreshDeepSync,
-  buildRecordsAgentJsonlExport,
   buildRecordsMarkdownExport,
   filterRecordCards,
   normalizeSourceHost,
   readStoredRecords,
-  writeRecordsAgentJsonlExport,
-  writeRecordsMarkdownExport,
 } from './record-exports.js';
 import {
-  closeLiveHarnessDashboard,
+  closeBrowserSession,
   openBrowserSession,
   triggerRawDeepSync,
 } from '../browser/sync-api.js';
@@ -93,7 +91,7 @@ function normalizeLegacyPullStateKey(key = '') {
   }).join('|');
 }
 
-export async function readPullState(statePath) {
+async function readPullState(statePath) {
   if (!statePath) return {};
   try {
     const raw = await readFile(statePath, 'utf8');
@@ -111,7 +109,7 @@ export async function writePullState(statePath, state) {
   return statePath;
 }
 
-export async function findLatestExportEndDateFromFilenames({
+async function findLatestExportEndDateFromFilenames({
   outputDir = process.cwd(),
 } = {}) {
   let entries = [];
@@ -291,7 +289,7 @@ export async function runAgentExportWorkflow(options = {}) {
         });
       }
     } finally {
-      await closeLiveHarnessDashboard({ browser, page });
+      await closeBrowserSession({ browser, page });
     }
   }
 
@@ -328,7 +326,7 @@ export async function runAgentExportWorkflow(options = {}) {
   });
   const filters = createExportFilters(options, dateRange);
   const exportDownload = format === 'jsonl'
-    ? buildRecordsAgentJsonlExport({
+    ? buildAgentJsonlExport({
         cards: filtered.cards,
         records: filtered.recordsById,
         all: options.all,
@@ -352,11 +350,7 @@ export async function runAgentExportWorkflow(options = {}) {
   const outputPath = options.outputPath
     || path.join(outputDir, exportDownload.filename);
 
-  if (format === 'jsonl') {
-    await writeRecordsAgentJsonlExport({ outputPath, content: exportDownload.content });
-  } else {
-    await writeRecordsMarkdownExport({ outputPath, content: exportDownload.content });
-  }
+  await writePrivateFile(outputPath, exportDownload.content, 'utf8');
 
   const recordCount = exportDownload.exportedCards.length;
   const pullState = await maybeUpdatePullState({
@@ -609,8 +603,7 @@ function redactSourceHostCounts(cards = [], recordsById = new Map()) {
 }
 
 function createSafeSummary(cards = [], recordsById = new Map()) {
-  const sortedCards = [...cards].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
-  const latestClinicalDate = sortedCards
+  const latestClinicalDate = cards
     .map((card) => normalizeClinicalDateForRange(card.date || recordsById.get(card.id)?.date || ''))
     .filter(Boolean)
     .sort()

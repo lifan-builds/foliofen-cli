@@ -37,19 +37,6 @@ export function createRecordBrowserState({
     };
 }
 
-export function getPatientOptions(cards = []) {
-    return [...new Map(cards
-        .map((card) => card.patient)
-        .filter((patient) => patient?.key)
-        .map((patient) => [patient.key, patient])).values()]
-        .sort((a, b) => a.label.localeCompare(b.label));
-}
-
-export function getCategoryOptions(cards = []) {
-    return [...new Set(cards.map((card) => card.category).filter(Boolean))]
-        .sort((a, b) => a.localeCompare(b));
-}
-
 export function labelize(value) {
     return String(value || '')
         .split('-')
@@ -98,12 +85,12 @@ export function getRecordDisplayText(record = {}, card = {}) {
     return String(record?.rawText || record?.summary || card?.snippet || '');
 }
 
-export function compareRecords(a, b) {
+function compareRecords(a, b) {
     return parseRecordDate(b) - parseRecordDate(a)
         || String(b.extractedAt || '').localeCompare(String(a.extractedAt || ''));
 }
 
-export function parseRecordDate(card) {
+function parseRecordDate(card) {
     const clinicalDate = normalizeClinicalDateForRange(card.date || '');
     if (clinicalDate) return Date.parse(`${clinicalDate}T00:00:00.000Z`);
     const timestamp = Date.parse(card.date || card.extractedAt || '');

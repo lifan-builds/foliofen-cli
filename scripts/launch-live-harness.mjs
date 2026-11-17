@@ -105,24 +105,27 @@ export async function launchLiveHarness({
   return { browser, session };
 }
 
+export async function waitForBrowserDisconnect(browser) {
+  const close = async () => {
+    await browser?.close();
+    process.exit(0);
+  };
+
+  process.once('SIGINT', close);
+  process.once('SIGTERM', close);
+
+  await new Promise((resolve) => {
+    browser.on('disconnected', resolve);
+  });
+}
+
 async function main() {
   let browser;
   try {
     const result = await launchLiveHarness();
     browser = result.browser;
     printSession(result.session);
-
-    const close = async () => {
-      await browser?.close();
-      process.exit(0);
-    };
-
-    process.once('SIGINT', close);
-    process.once('SIGTERM', close);
-
-    await new Promise((resolve) => {
-      browser.on('disconnected', resolve);
-    });
+    await waitForBrowserDisconnect(browser);
   } catch (error) {
     await browser?.close();
     console.error(error.message);

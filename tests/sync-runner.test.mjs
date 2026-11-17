@@ -11,7 +11,6 @@ import {
   classifyDiscoveryEvidence,
   enrichVisitNoteFromHeader,
   getSyncSkipReason,
-  shouldVisitSyncTarget,
   shouldInspectVisitFrame,
   isSameOriginFrame,
 } from '../src/browser/sync-runner.js';
@@ -38,12 +37,12 @@ test('routine sync revisits marked discovery targets even when URL was visited',
   };
 
   assert.equal(
-    shouldVisitSyncTarget({
+    getSyncSkipReason({
       url: 'https://mychart.example.test/MyChart/Visits',
       category: 'visits',
       refreshOnIncremental: true,
     }, { visitedUrls }),
-    true,
+    '',
   );
 });
 
@@ -53,11 +52,11 @@ test('routine sync still skips already visited detail targets', () => {
   };
 
   assert.equal(
-    shouldVisitSyncTarget({
+    getSyncSkipReason({
       url: 'https://mychart.example.test/MyChart/app/visits/note?csn=1&hnoID=2',
       category: 'visits',
     }, { visitedUrls }),
-    false,
+    'visited',
   );
 });
 
@@ -67,13 +66,13 @@ test('routine sync revisits already visited priority details missing stored reco
   };
 
   assert.equal(
-    shouldVisitSyncTarget({
+    getSyncSkipReason({
       url: 'https://mychart.example.test/MyChart/app/visits/note?csn=1&hnoID=2',
       category: 'visits',
       priorityDetail: true,
       hasStoredRecord: false,
     }, { visitedUrls }),
-    true,
+    '',
   );
 });
 
@@ -83,13 +82,13 @@ test('routine sync skips already covered priority details', () => {
   };
 
   assert.equal(
-    shouldVisitSyncTarget({
+    getSyncSkipReason({
       url: 'https://mychart.example.test/MyChart/app/visits/note?csn=1&hnoID=2',
       category: 'visits',
       priorityDetail: true,
       hasStoredRecord: true,
     }, { visitedUrls }),
-    false,
+    'covered',
   );
 });
 
@@ -111,13 +110,13 @@ test('routine sync explains covered and visited target skips', () => {
 
 test('patient-scoped canonical coverage skips an equivalent unvisited URL variant', () => {
   assert.equal(
-    shouldVisitSyncTarget({
+    getSyncSkipReason({
       url: 'https://mychart.example.test/MyChart/app/test-results/details?pageMode=2&eorderid=1',
       category: 'test-results',
       priorityDetail: true,
       hasStoredRecord: true,
     }, { visitedUrls: {} }),
-    false,
+    'covered',
   );
 });
 
@@ -126,6 +125,7 @@ test('visit note coverage matches equivalent note routes by hno identifiers', ()
     category: 'visits',
     recordType: 'visit-note',
     title: 'Consulting Provider Notes',
+    rawText: 'Assessment: synthetic clinical narrative with follow-up instructions. '.repeat(4),
     sourceUrl: 'https://mychart.example.test/MyChart/app/visit-notes/note?csn=abc&hnoID=note-1&hnoDAT=date-1',
   }]);
 
@@ -211,11 +211,11 @@ test('forced sync revisits all targets', () => {
   };
 
   assert.equal(
-    shouldVisitSyncTarget({
+    getSyncSkipReason({
       url: 'https://mychart.example.test/MyChart/app/test-results/details?pageMode=1&eorderid=abc',
       category: 'test-results',
     }, { visitedUrls, force: true }),
-    true,
+    '',
   );
 });
 
@@ -306,4 +306,25 @@ test('document download URL is built from Epic details metadata', () => {
     url,
     'https://mychart.example.test/mychart/Documents/ViewDocument/DownloadOrStream?dcsid=abc&displayName=Scan+-+LABS+-+EXTERNAL+SCAN+-+Jun+1%2C+2026&dcsExt=PDF',
   );
+});
+
+test('discharge and operation headers override historical dates inside note bodies', () => {
+  for (const title of ['Discharge Summary', 'Operation Note']) {
+    const record = enrichVisitNoteFromHeader({ id: 'demo:visits:01/01/2020:x', recordType: 'visit-note', title: 'Hospital Course:', date: '01/01/2020', rawText: 'Historical admission followed by current procedure.' }, `${title}\nSigned Apr 13, 2026`);
+    assert.equal(record.date, 'Apr 13, 2026');
+    assert.equal(record.title, title);
+  }
+});
+
+
+test('encounter date replaces a historical date in a generic embedded note', () => {
+  const record = enrichVisitNoteFromHeader({
+    id: 'demo:visits:1/2/2020:x', recordType: 'visit',
+    title: 'Chief Complaint', date: '1/2/2020', rawText: 'Past surgical history: 1/2/2020. Assessment/Plan: follow up.',
+  }, 'Appointment - Apr 19, 2026(Demo Child)\nNotes from Care Team');
+  assert.equal(record.date, 'Apr 19, 2026');
+  assert.equal(record.title, 'Appointment - Apr 19, 2026(Demo Child)');
+  assert.ok(record.id.includes(':Apr 19, 2026:'));
+  const signed = enrichVisitNoteFromHeader({...record, title: 'Chief Complaint'}, 'Appointment - Apr 19, 2026(Demo Child)\nProgress Notes\nSigned Apr 20, 2026');
+  assert.equal(signed.date, 'Apr 20, 2026');
 });

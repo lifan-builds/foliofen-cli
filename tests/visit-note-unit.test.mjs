@@ -366,3 +366,31 @@ test('visit-note unit strips collapsed MyChart page chrome from loaded note body
   assert.doesNotMatch(extraction.records[0].rawText, /High Contrast|enable JavaScript|MRN|Community Resources|Share My Record|Print this page/i);
   assert.match(extraction.records[0].rawText, /Telephone Encounter by/);
 });
+
+test('operative reports with section headings rather than colon labels are substantive notes', () => {
+  const records = extractMyChartRecordsFromText(`
+    Notes from Care Team
+    Operation Note
+    Signed Apr 13, 2026
+    Demo Hospital
+    PREOPERATIVE DIAGNOSIS
+    Example condition
+    POSTOPERATIVE DIAGNOSIS
+    Example condition
+    PROCEDURE
+    Example repair
+    INDICATIONS
+    Planned repair of the example condition.
+    DESCRIPTION OF PROCEDURE
+    The procedure was completed and the patient tolerated it well.
+  `, { category: 'visits', sourceUrl: 'https://example.test/MyChart/app/visits/note?csn=demo&hnoID=example' });
+  assert.equal(records.length, 1);
+  assert.match(records[0].rawText, /procedure was completed/);
+});
+
+test('operation section headings also survive storage quality filtering', async () => {
+  const { hasStoredVisitNoteSubstance, isInvalidStoredVisitShell } = await import('../src/core/clinical-record-quality.js');
+  const rawText = 'Notes from Care Team\nPREOPERATIVE DIAGNOSIS\nExample condition\nDESCRIPTION OF PROCEDURE\nExample repair completed.';
+  assert.equal(hasStoredVisitNoteSubstance(rawText), true);
+  assert.equal(isInvalidStoredVisitShell({ category: 'visits', recordType: 'visit-note', rawText, sourceUrl: 'https://example.test/MyChart/app/visits/note?csn=demo' }), false);
+});
