@@ -1,5 +1,3 @@
-import { buildAgentJsonlExport } from './agent-jsonl-export.js';
-import { getLatestClinicalDateFromCards } from './clinical-dates.js';
 import {
   buildDateRangeMarkdownExportDownload,
   buildMarkdownExportDownload,
@@ -11,7 +9,6 @@ import {
 } from './paths.js';
 import { createRecordBrowserState } from './record-browser.js';
 import { JsonMedicalStore } from '../storage/json-store.js';
-import { writePrivateFile } from './private-files.js';
 
 export function assertFreshDeepSync({
   syncMetadata = {},
@@ -67,26 +64,6 @@ export function normalizeSourceHost(value = '') {
 
 function getSourceHost(card = {}, record = {}) {
   return normalizeSourceHost(card.sourceUrl || record.sourceUrl || '');
-}
-
-export async function exportRecordsMarkdown({
-  cards = [],
-  records = [],
-  all = false,
-  startDate = '',
-  endDate = '',
-  filters = {},
-  generatedAt,
-} = {}) {
-  return buildRecordsMarkdownExport({
-    cards,
-    records,
-    all,
-    startDate,
-    endDate,
-    filters,
-    generatedAt,
-  });
 }
 
 export function filterRecordCards({
@@ -183,108 +160,4 @@ export function buildRecordsMarkdownExport({
     ...exportDownload,
     exportedCards,
   };
-}
-
-export function buildRecordsAgentJsonlExport({
-  cards = [],
-  records = [],
-  all = false,
-  startDate = '',
-  endDate = '',
-  filters = {},
-  syncMetadata = {},
-  generatedAt,
-  chunkSize,
-  chunkOverlap,
-} = {}) {
-  return buildAgentJsonlExport({
-    generatedAt,
-    cards,
-    records,
-    all,
-    startDate,
-    endDate,
-    filters,
-    syncMetadata,
-    chunkSize,
-    chunkOverlap,
-  });
-}
-
-export function exportLatestDay({
-  cards = [],
-  records = [],
-  patient = '',
-  patientLabelExact = '',
-  patientKey = '',
-  sourceHost = '',
-  categories,
-  category = '',
-  query = '',
-  filters = {},
-  generatedAt,
-} = {}) {
-  const categorySet = new Set((Array.isArray(categories) ? categories : [])
-    .map((item) => String(item || '').trim())
-    .filter(Boolean));
-  const recordsById = records instanceof Map
-    ? records
-    : new Map(records.map((record) => [record.id, record]));
-  const categoryFilteredCards = categorySet.size
-    ? cards.filter((card) => categorySet.has(card.category))
-    : cards;
-  const filtered = filterRecordCards({
-    cards: categoryFilteredCards,
-    records: recordsById,
-    patient,
-    patientLabelExact,
-    patientKey,
-    sourceHost,
-    category,
-    query,
-  });
-  const latestDate = getLatestClinicalDateFromCards(filtered.cards);
-  if (!latestDate) {
-    throw new Error('No dated records matched the current filters, so latest-day export cannot be built.');
-  }
-  const exportDownload = buildRecordsMarkdownExport({
-    cards: filtered.cards,
-    records: filtered.recordsById,
-    startDate: latestDate,
-    endDate: latestDate,
-    filters: {
-      ...filters,
-      query,
-      patientKey,
-      patientLabel: patientLabelExact || patient || filters.patientLabel || '',
-      category: category || filters.category || '',
-      startDate: latestDate,
-      endDate: latestDate,
-    },
-    generatedAt,
-  });
-
-  return {
-    ...exportDownload,
-    latestDate,
-    filteredCards: filtered.cards,
-  };
-}
-
-export async function writeRecordsMarkdownExport({
-  outputPath,
-  content,
-} = {}) {
-  if (!outputPath) throw new Error('outputPath is required.');
-  await writePrivateFile(outputPath, content, 'utf8');
-  return outputPath;
-}
-
-export async function writeRecordsAgentJsonlExport({
-  outputPath,
-  content,
-} = {}) {
-  if (!outputPath) throw new Error('outputPath is required.');
-  await writePrivateFile(outputPath, content, 'utf8');
-  return outputPath;
 }

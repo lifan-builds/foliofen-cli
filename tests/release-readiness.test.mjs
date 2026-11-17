@@ -10,7 +10,6 @@ import { promisify } from 'node:util';
 import { writePullState } from '../src/core/agent-export-workflow.js';
 import { buildSyntheticDemo, formatSyntheticDemo } from '../src/core/demo.js';
 import { resolveMyChartPaths } from '../src/core/paths.js';
-import { writeRecordsMarkdownExport } from '../src/core/record-exports.js';
 import { writePrivateFile } from '../src/core/private-files.js';
 import { JsonMedicalStore } from '../src/storage/json-store.js';
 import {
@@ -80,7 +79,7 @@ test('medical stores, exports, and pull state use private permissions', async ()
   const statePath = path.join(root, 'state', 'pull.json');
 
   await new JsonMedicalStore({ storePath }).writeStore({ records: [], indexCards: [] });
-  await writeRecordsMarkdownExport({ outputPath: exportPath, content: '{"kind":"synthetic"}\n' });
+  await writePrivateFile(exportPath, '{"kind":"synthetic"}\n', 'utf8');
   await writePullState(statePath, { version: 1, scopes: {} });
 
   if (process.platform !== 'win32') {

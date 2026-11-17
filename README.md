@@ -153,20 +153,6 @@ npm test
 npm run check:release
 ```
 
-Optional REA analysis stays local and source-only by default:
-
-The Codex-managed REA runtime is shared from `/Users/lfan/.agents/rea`, so
-trusted projects can use the same installation through their project wrapper.
-
-```bash
-npm run rea:fixture
-npm run rea -- analyze-javascript-application .tools/rea-fixture \
-  --artifact-format directory --json
-```
-
-See [docs/rea-mychart.md](docs/rea-mychart.md) for the privacy boundary and
-the read-only workflow for investigating portal request shapes.
-
 The test suite uses synthetic fixtures. Release checks must never launch a live
 portal, read an authenticated browser profile, or inspect a local record store.
 

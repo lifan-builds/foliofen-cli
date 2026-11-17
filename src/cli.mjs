@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 
 import { initLiveHarness } from '../scripts/init-live-harness.mjs';
 import { validateLiveHarness } from '../scripts/validate-live-harness.mjs';
-import { launchLiveHarness } from '../scripts/launch-live-harness.mjs';
+import { launchLiveHarness, waitForBrowserDisconnect } from '../scripts/launch-live-harness.mjs';
 import { filterCardsByRecordDateRange } from './core/markdown-export.js';
 import {
   filterRecordCards,
@@ -22,7 +22,7 @@ import {
   resolveMyChartPaths,
 } from './core/paths.js';
 import {
-  closeLiveHarnessDashboard,
+  closeBrowserSession,
   openBrowserSession,
   triggerRawDeepSync,
 } from './browser/sync-api.js';
@@ -131,7 +131,7 @@ async function withSession(options, callback) {
   try {
     return await callback(session);
   } finally {
-    await closeLiveHarnessDashboard(session);
+    await closeBrowserSession(session);
   }
 }
 
@@ -142,13 +142,7 @@ async function commandBrowser(subcommand, options) {
       headless: options.headless === true,
       mychartUrl: options.url,
     });
-    const close = async () => {
-      await result.browser?.close();
-      process.exit(0);
-    };
-    process.once('SIGINT', close);
-    process.once('SIGTERM', close);
-    await new Promise((resolve) => result.browser.on('disconnected', resolve));
+    await waitForBrowserDisconnect(result.browser);
     return;
   }
   if (subcommand === 'check' || subcommand === 'validate') {
