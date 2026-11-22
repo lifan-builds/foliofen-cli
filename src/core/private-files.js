@@ -27,6 +27,6 @@ export async function applyPrivateMode(targetPath, mode) {
   try {
     await chmod(targetPath, mode);
   } catch (error) {
-    if (!['ENOSYS', 'ENOTSUP', 'EPERM'].includes(error.code)) throw error;
+    if (!['ENOSYS', 'ENOTSUP'].includes(error.code)) throw error;
   }
 }

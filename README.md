@@ -171,7 +171,7 @@ scripts/              harness and release helpers
 tests/                synthetic regression tests
 ```
 
-MIT licensed. Bug reports and contributions are welcome, but never include
+Bug reports and contributions are welcome, but never include
 patient data, credentials, screenshots, authenticated URLs, or real exports.
 
 ## Upgrading from the previous name
