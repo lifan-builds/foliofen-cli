@@ -181,3 +181,7 @@ The executable is now `foliofen-cli`. Existing private data directories,
 The on-disk `mychart-cli` directory and `.awesome-mychart` legacy paths are
 internal compatibility identifiers; do not rename or delete them during this
 update. Existing exports remain readable.
+
+## License
+
+Copyright © 2026 [lifan-builds](https://github.com/lifan-builds). **All Rights Reserved** — source-available for **personal non-commercial use** and **upstream Pull Request contributions only** under [LICENSE](LICENSE) (`LicenseRef-lifan-builds-Proprietary`). Commercial use, hosted wrappers, rebranding, standalone forks/mirrors, and dataset/HTML extraction without prior written permission are prohibited. Pull Requests are welcome under [CONTRIBUTING.md](CONTRIBUTING.md).

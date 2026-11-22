@@ -1,26 +1,19 @@
 # Contributing
 
-Open an issue before a large compatibility change. Keep pull requests focused
-and include deterministic tests for new portal shapes.
+Bug fixes, documentation improvements, and focused Pull Requests are welcome.
 
-## Never submit patient data
+## Forking & Pull Request Scope
 
-Fixtures, logs, screenshots, issue bodies, commits, and pull requests must use
-synthetic information. Do not submit patient names, dates of birth, medical
-record numbers, clinical dates, hospital names tied to a patient, credentials,
-cookies, authenticated URLs, or copied chart text.
+Per [LICENSE](LICENSE) (`LicenseRef-lifan-builds-Proprietary`), you may fork this repository on GitHub and modify a branch
+locally **solely** to prepare, test, and submit a Pull Request back to the canonical
+`https://github.com/lifan-builds` repository. Publishing or maintaining standalone forks, mirrors,
+rebranded copies, or commercial derivatives is not permitted.
 
-Use `Demo Patient`, `example.org`, invented dates, and obviously synthetic
-clinical text. Search the complete diff before committing.
+## Inbound Contribution License
 
-## Checks
+By submitting a Pull Request, patch, or other contribution, you confirm that:
 
-```bash
-npm test
-npm run check:release
-git diff --check
-```
-
-Do not use a live portal or authenticated browser profile to validate a pull
-request. If a portal-specific problem cannot be captured safely, describe the
-DOM shape with a synthetic fixture.
+1. The contribution is your original work (or you have full legal authority to submit it); and
+2. You grant `lifan-builds` (and its successors and assigns) the perpetual, worldwide,
+   irrevocable, royalty-free, transferable, sublicensable commercial and relicensing rights set
+   forth in **Section 4 of [LICENSE](LICENSE)**.

@@ -2,7 +2,7 @@
   "name": "@lifan-builds/foliofen-cli",
   "version": "0.1.1",
   "description": "Foliofen CLI: export your health records locally as Markdown or JSONL.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "bin": {
     "foliofen-cli": "src/cli.mjs"
   },
