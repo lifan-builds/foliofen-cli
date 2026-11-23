@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Relicensed as open source `AGPL-3.0-only` with Section 7 attribution terms (`LICENSE`, `ATTRIBUTION.md`); `foliofen-cli --version` prints the attribution. Contributions need a one-time CLA (`CLA.md`).
+- Keep short signed visit notes and finish visit pagination cleanly; propagate `chmod` EPERM failures.
+
 ## 0.1.1
 
 - Rename the product and executable to Foliofen CLI (`foliofen-cli`).
