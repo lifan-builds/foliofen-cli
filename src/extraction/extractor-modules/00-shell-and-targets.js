@@ -1,5 +1,7 @@
 (function attachExtractorCore(root) {
     const DEFAULT_MYCHART_HOME_URL = 'https://mychart.example.org/mychart/Home';
+    // Epic's signed-note header: "<note type> by <author> at MM/DD/YYYY".
+    const SIGNED_NOTE_HEADER_PATTERN = /\b[a-z][a-z&/' -]{1,60} by [^\n]{2,80}? at \d{1,2}\/\d{1,2}\/\d{2,4}\b/i;
 
     function normalizeText(value) {
         return String(value || '')

@@ -127,6 +127,9 @@
 
             const procedureTitle = inferProcedureTitle();
             if (procedureTitle) return procedureTitle;
+
+            const signedNoteTitle = lines.find((line) => SIGNED_NOTE_HEADER_PATTERN.test(line) && line.length < 220);
+            if (signedNoteTitle) return cleanTitle(signedNoteTitle);
         }
         const title = lines.find((line) => {
             const normalized = line.toLowerCase();
@@ -353,7 +356,7 @@
         const hasVisitNoteMarker = /\b(?:progress notes?|clinical notes?|provider notes?|procedure notes?|procedure time|indications?|complications?|after visit summary|telephone encounter by|neuraxial procedure note|plan of care by|lactation note by|h&p signed by|admit summary|hospital course|patient (?:called|states?)|nurse spoke with patient|chief complaint|history of present illness|assessment and plan|impression|plan|instructions|preprocedure check|performing provider|authorizing provider|progress note date of service|physical exam dol|respiratory support|fen assessment|reason for consult|maternal hx)\b/i.test(text);
         const hasClinicalContext = /\b(?:office visit|clinical support|hospital encounter|telephone encounter|signed|nurse|rn\b|with\s+[A-Z][A-Za-z'.-]+|vital signs|room air|nicu|infant|mother|father|active medications?|gestational age|post menstrual age|lactation)\b/i.test(text)
             || /\b(?:date|patient|procedure|indications?)\s*:/i.test(text);
-        return hasVisitNoteMarker && hasClinicalContext;
+        return (hasVisitNoteMarker && hasClinicalContext) || SIGNED_NOTE_HEADER_PATTERN.test(text);
     }
 
     function looksLikeControlOnlyBlock(text, category = '') {
