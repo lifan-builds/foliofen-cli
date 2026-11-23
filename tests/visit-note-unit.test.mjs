@@ -394,3 +394,40 @@ test('operation section headings also survive storage quality filtering', async 
   assert.equal(hasStoredVisitNoteSubstance(rawText), true);
   assert.equal(isInvalidStoredVisitShell({ category: 'visits', recordType: 'visit-note', rawText, sourceUrl: 'https://example.test/MyChart/app/visits/note?csn=demo' }), false);
 });
+
+test('short signed notes with a generic "<type> by <author> at <date>" header are kept (ED triage, PCP summary)', async () => {
+  const { hasStoredVisitNoteSubstance, isInvalidStoredVisitShell } = await import('../src/core/clinical-record-quality.js');
+  const notes = [
+    'Notes from Care Team\nED Triage Notes(Demo)\nSigned Jan 2, 2026\nED Triage Notes by Example, RN at 01/02/2026 6:35 PM\nPt arrives to ED with parents for demo complaint.',
+    'Notes from Care Team\nED Info for PCP(Demo)\nSigned Jan 2, 2026\nED Info for PCP by Example Provider, MD at 01/02/2026 10:37 PM\nQuick Summary for PCP\nDemo summary for PCP.',
+  ];
+  for (const rawText of notes) {
+    assert.equal(hasStoredVisitNoteSubstance(rawText), true);
+    assert.equal(isInvalidStoredVisitShell({ category: 'visits', recordType: 'visit-note', rawText, sourceUrl: 'https://example.test/MyChart/app/visits/note?csn=demo&hnoID=x' }), false);
+    const records = extractMyChartRecordsFromText(rawText, { category: 'visits', sourceUrl: 'https://example.test/MyChart/app/visits/note?csn=demo&hnoID=x' });
+    assert.equal(records.length, 1);
+    assert.match(records[0].rawText, / by Example/);
+  }
+  assert.equal(hasStoredVisitNoteSubstance('Notes from Care Team\nED Provider Notes Signed Jan 3, 2026, 1:15 PM Example Provider'), false);
+});
+
+test('DOM extraction keeps a short signed note whose body is only reachable through a shadow root', () => {
+  const chrome = 'Example Health MyChart - Note from Care Team\nNotes from Care Team\nED Triage Notes(Demo)\nSigned Jan 2, 2026';
+  const noteBody = 'ED Triage Notes by Example, RN at 01/02/2026 6:35 PM\nPt arrives to ED with parents for demo complaint.';
+  const text = (value) => ({ nodeType: 3, nodeValue: value });
+  const host = { nodeType: 1, tagName: 'DIV', getAttribute: () => '', childNodes: [], shadowRoot: { nodeType: 11, childNodes: [text(noteBody)] } };
+  const body = { nodeType: 1, tagName: 'BODY', getAttribute: () => '', innerText: chrome, textContent: chrome, childNodes: [text(chrome), host], querySelectorAll: () => [] };
+  const href = 'https://mychart.example.org/MyChart/app/visits/note?csn=demo&hnoID=triage';
+  const documentRef = {
+    title: 'MyChart - Note from Care Team',
+    body,
+    documentElement: { nodeType: 1, tagName: 'HTML', getAttribute: () => '', innerText: chrome, textContent: chrome, childNodes: [body] },
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    location: { href },
+  };
+  const extraction = extractRecordsFromDocument(documentRef, { href, origin: 'https://mychart.example.org' });
+  assert.equal(extraction.records.length, 1);
+  assert.match(extraction.records[0].rawText, /Pt arrives to ED/);
+  assert.equal(extraction.records[0].title, 'ED Triage Notes by Example, RN at 01/02/2026 6:35 PM');
+});

@@ -9,6 +9,8 @@ const VISIT_NOTE_READY_PATTERN = [
     'progress notes? signed by',
     'progress note date of service',
     'ed provider notes? by',
+    // Epic's signed-note header: "<note type> by <author> at MM/DD/YYYY".
+    "[a-z][a-z&/' -]{1,60} by [^\\n]{2,80}? at \\d{1,2}/\\d{1,2}/\\d{2,4}",
     'procedure notes? by',
     'telephone encounter by',
     'plan of care by',

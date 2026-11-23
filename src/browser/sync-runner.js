@@ -418,6 +418,15 @@ async function gotoWithFallback(page, target) {
   throw lastError || new Error(`Could not navigate to ${target.url}`);
 }
 
+// Seed URLs use priority 0, so a falsy default would push them behind discovery.
+export function compareSyncPriority(a, b) {
+  return (a.priority ?? 10) - (b.priority ?? 10);
+}
+
+export function safeErrorReason(error) {
+  return String(error?.message || '').replace(/https?:\/\/\S+/g, '[url]').slice(0, 160);
+}
+
 async function waitForRouteReady(page, category = '') {
   await page.waitForFunction((expectedCategory) => {
     if (document.readyState === 'loading') return false;
@@ -489,9 +498,12 @@ async function loadMoreVisits(page, beforeNavigation) {
     return true;
   });
   if (!more) return false;
-  await page.waitForFunction((previous) => document.querySelectorAll('[role="link"][data-id]').length > previous,
-    { timeout: 15000 }, count);
-  return true;
+  // The final click on an exhausted list removes the button without adding cards.
+  await page.waitForFunction((previous) => document.querySelectorAll('[role="link"][data-id]').length > previous
+    || ![...document.querySelectorAll('a,button,[role="button"]')]
+      .some((e) => /load more past visits/i.test(e.innerText || '') && e.getClientRects().length),
+  { timeout: 15000 }, count);
+  return await page.$$eval('[role="link"][data-id]', (elements) => elements.length) > count;
 }
 
 async function openVisitClinicalNotesIfPresent(page) {
@@ -648,7 +660,7 @@ function enqueueExtractionLinks({
       priorityDetail: classification.admission === 'strict',
       broadCandidate: classification.admission === 'exhaustive',
       hasStoredRecord,
-      priority: target.priority || 10,
+      priority: target.priority ?? 10,
     };
     if (classification.admission === 'strict' || exhaustive) queue.push(queued);
     else exhaustiveCandidates.push(queued);
@@ -803,7 +815,7 @@ export async function runPuppeteerDeepSync({
       category: target.category,
       patientContextToken,
     })),
-  }))].sort((a, b) => (a.priority || 10) - (b.priority || 10));
+  }))].sort(compareSyncPriority);
   const queue = [];
   for (const target of initialTargets) {
     const key = target.canonicalKey || createSourceUrlKey(target.url);
@@ -879,6 +891,7 @@ export async function runPuppeteerDeepSync({
           activePatientContext: status.activePatientContext,
           categoryCompletion: status.categoryCompletion,
           errorCount: status.errors.length,
+          errors: status.errors,
           unresolvedSuspicionCount: exhaustiveCandidates.length + unresolvedSuspicionCategories.size,
           routeCounts: status.routeCounts,
           navigatedRouteCounts: status.navigatedRouteCounts,
@@ -1016,7 +1029,7 @@ export async function runPuppeteerDeepSync({
           break;
         }
         const stage = 'page';
-        status.errors.push({ stage, category: target.category || 'unknown', message: error.name || 'Error' });
+        status.errors.push({ stage, category: target.category || 'unknown', message: error.name || 'Error', reason: safeErrorReason(error) });
         status.errorStages[stage] = (status.errorStages[stage] || 0) + 1;
       }
     }
