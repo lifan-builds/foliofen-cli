@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 (function attachExtractorCore(root) {
     const DEFAULT_MYCHART_HOME_URL = 'https://mychart.example.org/mychart/Home';
     // Epic's signed-note header: "<note type> by <author> at MM/DD/YYYY".

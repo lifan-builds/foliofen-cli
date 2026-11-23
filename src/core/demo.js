@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 import { buildAgentJsonlExport } from './agent-jsonl-export.js';
 
 const GENERATED_AT = '2026-01-15T12:00:00.000Z';

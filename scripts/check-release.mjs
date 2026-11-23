@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 import { execFile } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';

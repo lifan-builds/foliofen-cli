@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 import { createHmac, randomBytes } from 'node:crypto';
 import { chmod, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';

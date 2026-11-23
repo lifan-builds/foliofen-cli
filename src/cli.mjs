@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-import { realpathSync } from 'node:fs';
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
+import { readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -33,9 +35,12 @@ import {
 import { loadEnvironmentFile } from './core/env.js';
 import { formatSyntheticDemo } from './core/demo.js';
 
+export const ATTRIBUTION = 'Based on Foliofen CLI by lifan-builds (https://github.com/lifan-builds/foliofen-cli)';
+
 function usage() {
   return `Usage:
   foliofen-cli demo
+  foliofen-cli --version
   foliofen-cli browser start [--visible|--headless] [--profile PATH] [--data-dir PATH] [--url URL]
   foliofen-cli browser check
   foliofen-cli browser validate
@@ -438,6 +443,11 @@ function formatCounts(counts = {}) {
 
 export async function main(argv = process.argv.slice(2)) {
   const [command, subcommand, ...rest] = argv;
+  if (command === '--version' || command === '-v') {
+    const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+    process.stdout.write(`foliofen-cli ${version}\n${ATTRIBUTION}\nLicense: AGPL-3.0-only with Section 7 attribution terms (ATTRIBUTION.md)\n`);
+    return;
+  }
   if (command === '--help' || command === '-h') {
     process.stdout.write(usage());
     return;

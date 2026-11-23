@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 import assert from 'node:assert/strict';
 import { chmod, mkdtemp, writeFile } from 'node:fs/promises';
 import os from 'node:os';
