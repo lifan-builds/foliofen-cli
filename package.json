@@ -1,6 +1,6 @@
 {
   "name": "@lifan-builds/foliofen-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Foliofen CLI: export your health records locally as Markdown or JSONL.",
   "license": "AGPL-3.0-only",
   "bin": {
