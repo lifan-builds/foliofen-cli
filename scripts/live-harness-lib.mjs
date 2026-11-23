@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 export const DEFAULT_LIVE_HARNESS_PORT = '9223';
 
 export function createLiveHarnessEndpoint(port = DEFAULT_LIVE_HARNESS_PORT) {

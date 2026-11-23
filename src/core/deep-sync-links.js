@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 export function isPriorityDetailLink(link, category) {
     if (category === 'imaging') category = 'test-results';
     const href = String(link?.href || '');

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
     function extractDate(text) {
         const value = String(text || '');
         const numericDate = /(?<![\d.])\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b(?![\d.])/g;

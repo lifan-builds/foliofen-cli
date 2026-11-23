@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -5,6 +7,22 @@ import path from 'node:path';
 import test from 'node:test';
 
 import { detachLaunchedBrowserForOneShot, main } from '../src/cli.mjs';
+
+test('CLI --version prints the AGPL attribution', async () => {
+  let output = '';
+  const originalWrite = process.stdout.write;
+  process.stdout.write = (chunk) => {
+    output += chunk;
+    return true;
+  };
+  try {
+    await main(['--version']);
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  assert.match(output, /Based on Foliofen CLI by lifan-builds \(https:\/\/github\.com\/lifan-builds\/foliofen-cli\)/);
+});
 
 test('CLI help advertises agent-facing commands', async () => {
   let output = '';
