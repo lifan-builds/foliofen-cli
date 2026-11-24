@@ -76,6 +76,48 @@ test('covered encounter containers remain refreshable because notes can be added
   assert.equal(links.length, 3);
  });
 
+test('discovery waits for delayed restore controls and checks highest card index rather than sorted tail', async () => {
+  const list = 'https://example.test/MyChart/visits';
+  let url = list;
+  let expanded = false;
+  let backRenders = 2;
+  const card = (index, notes) => ({
+    innerText: notes ? 'View clinical notes' : 'View After Visit Summary',
+    className: notes ? 'notes button' : 'avs button',
+    getAttribute: (key) => ({ 'data-id': notes ? 'notes-action' : 'avs-action', 'data-index': String(index) })[key],
+    click() { url = `https://example.test/MyChart/app/visits/past-details?csn=demo${index}`; },
+  });
+  // Card 0 (AVS) sorts after Card 1 (clinical notes), so sorted tail is index 0 even when index 1 is expanded.
+  const cards = () => (backRenders >= 2 ? [card(0, false), ...(expanded ? [card(1, true)] : [])] : []);
+  const more = {
+    innerText: 'Load more past visits',
+    getClientRects: () => (!expanded && backRenders >= 2 ? [1] : []),
+    click() { expanded = true; },
+  };
+  const doc = { querySelectorAll: (selector) => selector === '[role="link"][data-id]' ? cards() : [more] };
+  const evaluate = async (fn, arg) => {
+    const original = globalThis.document;
+    globalThis.document = doc;
+    try { return fn(arg); } finally { globalThis.document = original; }
+  };
+  const page = {
+    url: () => url,
+    $$eval: async (_selector, fn, arg) => fn(cards(), arg),
+    evaluate,
+    waitForNavigation: async () => {},
+    goBack: async () => { url = list; expanded = false; backRenders = 0; },
+    waitForFunction: async (fn, _options, arg) => {
+      for (let i = 0; i < 5; i += 1) {
+        backRenders += 1;
+        if (await evaluate(fn, arg)) return;
+      }
+      throw new Error('Pagination stalled');
+    },
+  };
+  const links = await collectVisitCardLinks(page);
+  assert.equal(links.length, 2);
+});
+
 test('a signed title alone does not establish saved note-body coverage', async () => {
   const { buildPriorityDetailCoverage } = await import('../src/browser/sync-runner.js');
   const coverage = buildPriorityDetailCoverage([{ category: 'visits', recordType: 'visit-note', title: 'Operation Note', rawText: 'Operation Note Signed Apr 13, 2026', sourceUrl: 'https://example.test/MyChart/app/visits/note?csn=demo&hnoID=demo' }]);

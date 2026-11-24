@@ -232,6 +232,34 @@ test('inspectMyChartLoginState does not treat postloginurl=Home as logged in', a
   assert.equal(state.loginVisible, true);
 });
 
+test('inspectMyChartLoginState treats a bare authenticated app route (standalone note) as logged in', async () => {
+  const page = {
+    evaluate(fn) {
+      const previous = { location: globalThis.location, document: globalThis.document, getComputedStyle: globalThis.getComputedStyle };
+      try {
+        globalThis.getComputedStyle = () => ({ visibility: 'visible', display: 'block' });
+        globalThis.location = {
+          href: 'https://example.test/MyChart/app/visits/note?csn=demo&hnoID=demo',
+          pathname: '/MyChart/app/visits/note',
+        };
+        globalThis.document = {
+          body: { innerText: 'Example MyChart - Note from Care Team\nSkip navigation to main content\nNotes from Care Team\nED Triage Notes(Demo)\nSigned Nov 18, 2026\nInteroperability Guide' },
+          querySelector: () => null,
+          querySelectorAll: () => [],
+        };
+        return fn();
+      } finally {
+        globalThis.location = previous.location;
+        globalThis.document = previous.document;
+        globalThis.getComputedStyle = previous.getComputedStyle;
+      }
+    },
+  };
+  const state = await inspectMyChartLoginState(page);
+  assert.equal(state.loggedIn, true);
+  assert.equal(state.loginVisible, false);
+});
+
 test('waitForMyChartCredentialFields waits until SSO credential fields are visible', async () => {
   let calls = 0;
   const page = {

@@ -433,3 +433,31 @@ test('DOM extraction keeps a short signed note whose body is only reachable thro
   assert.match(extraction.records[0].rawText, /Pt arrives to ED/);
   assert.equal(extraction.records[0].title, 'ED Triage Notes by Example, RN at 01/02/2026 6:35 PM');
 });
+
+test('menu stripping keeps the consult header and attestation instead of cutting to Chief Complaint', async () => {
+  const { sanitizeStoredVisitText } = await import('../src/core/clinical-record-quality.js');
+  const chrome = 'Example MyChart - Note from Care Team\nNotes from Care Team\nConsulting Provider Notes(Demo)\nSigned Nov 19, 2026';
+  const deep = [
+    'Friends and family', 'Demo Parent', 'Demo', 'Change language', 'Log out',
+    'Notes from Care Team', 'Consulting Provider Notes', '(Demo)', 'Signed Nov 19, 2026',
+    'Consulting Provider Notes by Example Resident at 11/18/2026 7:20 PM',
+    'Attestation signed by Example Attending, MD at 11/19/2026 8:06 AM',
+    'Leakage improved after balloon re-inflated in clinic.',
+    'Chief Complaint:', 'G-tube dislodged and replaced at home (GJ 10/13/26)',
+    'History of Present Illness:', 'Demo is a 7 m.o. boy.',
+  ].join('\n');
+  const text = (value) => ({ nodeType: 3, nodeValue: value });
+  const host = { nodeType: 1, tagName: 'DIV', getAttribute: () => '', childNodes: [], shadowRoot: { nodeType: 11, childNodes: [text(deep)] } };
+  const body = { nodeType: 1, tagName: 'BODY', getAttribute: () => '', innerText: chrome, textContent: chrome, childNodes: [host], querySelectorAll: () => [] };
+  const href = 'https://mychart.example.org/MyChart/app/visits/note?csn=demo&hnoID=consult';
+  const documentRef = {
+    title: 'MyChart - Note from Care Team', body,
+    documentElement: { nodeType: 1, tagName: 'HTML', getAttribute: () => '', innerText: chrome, textContent: chrome, childNodes: [body] },
+    querySelector: () => null, querySelectorAll: () => [], location: { href },
+  };
+  const [record] = extractRecordsFromDocument(documentRef, { href, origin: 'https://mychart.example.org' }).records;
+  assert.match(record.rawText, /Consulting Provider Notes by Example Resident/);
+  assert.match(record.rawText, /balloon re-inflated/);
+  assert.equal(record.title, 'Consulting Provider Notes by Example Resident at 11/18/2026 7:20 PM');
+  assert.match(sanitizeStoredVisitText(deep.replace(/\n/g, ' ')), /Attestation signed by Example Attending/);
+});
