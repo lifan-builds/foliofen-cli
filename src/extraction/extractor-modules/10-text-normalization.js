@@ -135,7 +135,7 @@
         if (category !== 'visits') return text;
         return String(text || '')
             .replace(/^(?=[\s\S]{0,4000}\b(?:[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+)*'s Menu|Your Menu|Search the menu|Main menu|Clear search field|Switch patients|Change language)\b)[\s\S]*?\bNotes from Care Team\b(?=\s+(?:Progress Notes|ED Provider Notes|Procedure Notes|Telephone Encounter|Anesthesia Procedure Notes|Plan of Care|Lactation Note|H&P|ADMIT SUMMARY|Signed|Updated)\b)/i, 'Notes from Care Team')
-            .replace(/^(?=[\s\S]{0,4000}\b(?:[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+)*'s Menu|Your Menu|Search the menu|Main menu|Clear search field|Switch patients|Change language)\b)[\s\S]*?\b(?=(?:Progress Notes by|ED Provider Notes by|Procedure Notes by|Telephone Encounter by|Anesthesia Procedure Notes|Plan of Care by|Lactation Note by|H&P signed by|ADMIT SUMMARY|Example Health Antepartum|Example Health Hospital Medicine|Assessment and Plan|Chief Complaint|History of Present Illness|Hospital Course)\b)/i, '');
+            .replace(/^(?=[\s\S]{0,4000}\b(?:[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+)*'s Menu|Your Menu|Search the menu|Main menu|Clear search field|Switch patients|Change language)\b)[\s\S]*?\b(?=(?:Progress Notes by|ED Provider Notes by|Procedure Notes by|Telephone Encounter by|Anesthesia Procedure Notes|Plan of Care by|Lactation Note by|H&P signed by|ADMIT SUMMARY|[A-Z][A-Za-z&/' -]{1,60} by [^\n]{2,80}? at \d{1,2}\/\d{1,2}\/\d{2,4}|Example Health Antepartum|Example Health Hospital Medicine|Assessment and Plan|Chief Complaint|History of Present Illness|Hospital Course)\b)/i, '');
     }
 
     function cleanClinicalLine(line, category = '') {
@@ -186,7 +186,7 @@
         if (category === 'visits') {
             cleaned = cleaned
                 .replace(/^(?=[\s\S]{0,4000}\b(?:[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+)*'s Menu|Your Menu|Search the menu|Main menu|Clear search field|Switch patients|Change language)\b)[\s\S]*?\bNotes from Care Team\b(?=\s+(?:Progress Notes|ED Provider Notes|Procedure Notes|Telephone Encounter|Anesthesia Procedure Notes|Plan of Care|Lactation Note|H&P|ADMIT SUMMARY|Signed|Updated)\b)/i, 'Notes from Care Team')
-                .replace(/^(?=[\s\S]{0,4000}\b(?:[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+)*'s Menu|Your Menu|Search the menu|Main menu|Clear search field|Switch patients|Change language)\b)[\s\S]*?\b(?=(?:Progress Notes by|ED Provider Notes by|Procedure Notes by|Telephone Encounter by|Anesthesia Procedure Notes|Plan of Care by|Lactation Note by|H&P signed by|ADMIT SUMMARY|Example Health Antepartum|Example Health Hospital Medicine|Assessment and Plan|Chief Complaint|History of Present Illness|Hospital Course)\b)/i, '')
+                .replace(/^(?=[\s\S]{0,4000}\b(?:[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+)*'s Menu|Your Menu|Search the menu|Main menu|Clear search field|Switch patients|Change language)\b)[\s\S]*?\b(?=(?:Progress Notes by|ED Provider Notes by|Procedure Notes by|Telephone Encounter by|Anesthesia Procedure Notes|Plan of Care by|Lactation Note by|H&P signed by|ADMIT SUMMARY|[A-Z][A-Za-z&/' -]{1,60} by [^\n]{2,80}? at \d{1,2}\/\d{1,2}\/\d{2,4}|Example Health Antepartum|Example Health Hospital Medicine|Assessment and Plan|Chief Complaint|History of Present Illness|Hospital Course)\b)/i, '')
                 .replace(/\bMyChart - (?:Note from Care Team|Past Visit Details)\b/gi, ' ')
                 .replace(/\bHigh Contrast\b/gi, ' ')
                 .replace(/^Error:\s*/i, '')

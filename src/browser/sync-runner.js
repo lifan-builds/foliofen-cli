@@ -153,7 +153,9 @@ export async function inspectMyChartLoginState(page) {
       || /\b(?:username|email|password|sign in|log in)\b/i.test(text);
     const needsMfa = /\b(?:verification code|security code|two-step|two factor|2-step|2fa|multi-factor|authenticator|captcha)\b/i
       .test(text);
+    // MyChart's /app/ SPA routes redirect to login when the session is gone; standalone note views omit the menu.
     const loggedIn = !isLoginRoute && !hasPasswordField && (/\/Home\b/i.test(path)
+      || /\/app\//i.test(path)
       || /\b(?:Visits|Test Results|Messages|Menu|Appointments|Health Summary)\b/i.test(text)
     );
     return { url, loginVisible, needsMfa, loggedIn, hasCredentialFields };
@@ -442,6 +444,9 @@ async function waitForRouteReady(page, category = '') {
   await page.waitForNetworkIdle({ idleTime: 200, timeout: 2000 }).catch(() => {});
 }
 
+// Live SCH visit cards have taken ~9 s to settle; 15 s failed whole syncs on slow portal days.
+const VISIT_CARD_NAVIGATION_TIMEOUT_MS = 45000;
+
 // Resolve portal-owned click handlers instead of guessing encrypted encounter URLs.
 export async function collectVisitCardLinks(page, { beforeNavigation = () => {} } = {}) {
   if (!/\/visits\/?$/i.test(new URL(page.url()).pathname)) return [];
@@ -454,13 +459,16 @@ export async function collectVisitCardLinks(page, { beforeNavigation = () => {} 
       .map((e) => ({ id: e.getAttribute('data-id'), index: e.getAttribute('data-index'), text: e.innerText, className: e.className }))
       .sort((a, b) => Number(/clinical notes/i.test(b.text)) - Number(/clinical notes/i.test(a.text)))
       .filter((card, index, all) => index === all.findIndex((other) => other.index === card.index)));
+    const restoreTargetIndex = cards.reduce((latest, card) => (
+      Number(card.index) > Number(latest) ? card.index : latest
+    ), cards.at(-1)?.index ?? '');
     for (const card of cards) {
       const key = card.index;
       if (seen.has(key)) continue;
       seen.add(key);
       beforeNavigation();
       await Promise.all([
-        page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }),
+        page.waitForNavigation({ waitUntil: 'networkidle2', timeout: VISIT_CARD_NAVIGATION_TIMEOUT_MS }),
         page.evaluate((item) => {
           const element = [...document.querySelectorAll('[role="link"][data-id]')]
             .find((e) => e.getAttribute('data-id') === item.id && e.getAttribute('data-index') === item.index && e.className === item.className);
@@ -475,11 +483,23 @@ export async function collectVisitCardLinks(page, { beforeNavigation = () => {} 
       }
       links.push({ text: card.text, href });
       beforeNavigation();
-      await page.goBack({ waitUntil: 'networkidle2', timeout: 15000 });
+      await page.goBack({ waitUntil: 'networkidle2', timeout: VISIT_CARD_NAVIGATION_TIMEOUT_MS });
+      await page.waitForFunction(
+        () => document.querySelectorAll('[role="link"][data-id]').length > 0,
+        { timeout: VISIT_CARD_NAVIGATION_TIMEOUT_MS },
+      );
       // Full-page back navigation can reset the expanded list to its first batch.
       for (let restore = 0; restore < batch; restore += 1) {
+        await page.waitForFunction(
+          (lastIndex) => [...document.querySelectorAll('[role="link"][data-id]')]
+            .some((e) => e.getAttribute?.('data-index') === lastIndex)
+            || [...document.querySelectorAll('a,button,[role="button"]')]
+              .some((e) => /load more past visits/i.test(e.innerText || '') && e.getClientRects().length),
+          { timeout: VISIT_CARD_NAVIGATION_TIMEOUT_MS },
+          restoreTargetIndex,
+        );
         const restored = await page.$$eval('[role="link"][data-index]', (elements, lastIndex) =>
-          elements.some((e) => e.getAttribute('data-index') === lastIndex), cards.at(-1).index);
+          elements.some((e) => e.getAttribute('data-index') === lastIndex), restoreTargetIndex);
         if (restored) break;
         if (!await loadMoreVisits(page, beforeNavigation)) throw new Error('Visit list lost expanded entries');
       }
@@ -504,7 +524,7 @@ async function loadMoreVisits(page, beforeNavigation) {
   await page.waitForFunction((previous) => document.querySelectorAll('[role="link"][data-id]').length > previous
     || ![...document.querySelectorAll('a,button,[role="button"]')]
       .some((e) => /load more past visits/i.test(e.innerText || '') && e.getClientRects().length),
-  { timeout: 15000 }, count);
+  { timeout: VISIT_CARD_NAVIGATION_TIMEOUT_MS }, count);
   return await page.$$eval('[role="link"][data-id]', (elements) => elements.length) > count;
 }
 
