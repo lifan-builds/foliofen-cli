@@ -15,6 +15,7 @@ import { resolveMyChartPaths } from '../src/core/paths.js';
 import { writePrivateFile } from '../src/core/private-files.js';
 import { JsonMedicalStore } from '../src/storage/json-store.js';
 import {
+  parseNpmPackOutput,
   scanPackedFilesForSecrets,
   scanRepositoryDenylist,
 } from '../scripts/check-release.mjs';
@@ -241,4 +242,13 @@ test('check-release entrypoint executes checks even when invoked through a symli
     execFileAsync(process.execPath, [binLink]),
     /unexpected package name/,
   );
+});
+
+test('parseNpmPackOutput supports npm <=11 array and npm 12+ keyed object formats', () => {
+  const sample = { name: '@lifan-builds/foliofen-cli', entryCount: 1, files: [{ path: 'README.md' }] };
+  assert.deepEqual(parseNpmPackOutput(JSON.stringify([sample])), sample);
+  assert.deepEqual(parseNpmPackOutput(JSON.stringify({ '@lifan-builds/foliofen-cli': sample })), sample);
+  assert.throws(() => parseNpmPackOutput('[]'), /unexpected npm pack output/);
+  assert.throws(() => parseNpmPackOutput('{}'), /unexpected npm pack output/);
+  assert.throws(() => parseNpmPackOutput('null'), /unexpected npm pack output/);
 });
