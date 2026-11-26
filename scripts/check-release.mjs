@@ -74,6 +74,20 @@ export async function scanPackedFilesForSecrets({
   }
 }
 
+export function parseNpmPackOutput(stdout) {
+  const parsed = JSON.parse(stdout);
+  if (Array.isArray(parsed)) {
+    assert(parsed.length === 1 && parsed[0] && typeof parsed[0] === 'object', 'unexpected npm pack output');
+    return parsed[0];
+  }
+  if (parsed && typeof parsed === 'object') {
+    const entries = Object.values(parsed);
+    assert(entries.length === 1 && entries[0] && typeof entries[0] === 'object', 'unexpected npm pack output');
+    return entries[0];
+  }
+  throw new Error('unexpected npm pack output');
+}
+
 export async function runReleaseCheck({ rootDir = root, env = process.env } = {}) {
   const packageJson = JSON.parse(await readFile(path.join(rootDir, 'package.json'), 'utf8'));
   assert(packageJson.name === '@lifan-builds/foliofen-cli', 'unexpected package name');
@@ -82,9 +96,7 @@ export async function runReleaseCheck({ rootDir = root, env = process.env } = {}
   assert(packageJson.dependencies?.['puppeteer-core'], 'puppeteer-core must be a runtime dependency');
 
   const { stdout } = await execFileAsync('npm', ['pack', '--dry-run', '--json'], { cwd: rootDir });
-  const packList = JSON.parse(stdout);
-  assert(Array.isArray(packList) && packList.length === 1 && packList[0], 'unexpected npm pack output');
-  const pack = packList[0];
+  const pack = parseNpmPackOutput(stdout);
   assert(Array.isArray(pack.files) && pack.files.length > 0, 'npm pack reported no files');
   const packedPaths = new Set(pack.files.map((file) => file.path));
   assert(packedPaths.has('scripts/init-live-harness.sh'), 'missing published live-harness compatibility launcher');
