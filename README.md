@@ -183,7 +183,7 @@ git push origin v0.1.3
 
 You can also run the workflow manually via `workflow_dispatch` with
 `dry_run: true` (the default) to verify tests, `check:release`, and
-`npm publish --access public --dry-run` without publishing.
+`npm pack --dry-run` without publishing.
 
 ## Project structure
 

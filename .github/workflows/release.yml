@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Verify tests, release checks, and npm publish --dry-run without publishing"
+        description: "Verify tests, release checks, and npm pack --dry-run without publishing"
         type: boolean
         default: true
 
@@ -88,9 +88,9 @@ jobs:
       - name: Run release checks
         run: npm run check:release
 
-      - name: Dry-run npm publish
+      - name: Dry-run package tarball
         if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true
-        run: npm publish --access public --dry-run
+        run: npm pack --dry-run
 
       - name: Publish to npm via OIDC Trusted Publishing
         if: github.event_name == 'push' || inputs.dry_run == false
