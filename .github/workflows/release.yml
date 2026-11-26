@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Verify tests, release checks, and npm publish --dry-run without publishing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pypdf test dependency
+        run: python -m pip install pypdf==6.9.2
+
+      - name: Upgrade npm for OIDC Trusted Publishing
+        run: |
+          npm install -g npm@latest
+          node -e '
+            const { execFileSync } = require("node:child_process");
+            const version = execFileSync("npm", ["--version"], { encoding: "utf8" }).trim();
+            const [major, minor, patch] = version.split(".").map((n) => Number.parseInt(n, 10));
+            const ok = major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1)));
+            console.log(`npm version: ${version}`);
+            if (!ok) {
+              console.error(`npm >= 11.5.1 is required for Trusted Publishing, got ${version}`);
+              process.exit(1);
+            }
+          '
+
+      - name: Verify release tag matches package.json
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          node -e '
+            const pkg = require("./package.json");
+            const { EVENT_NAME, REF_TYPE, REF_NAME, DRY_RUN } = process.env;
+            const isDryRun = EVENT_NAME === "workflow_dispatch" && DRY_RUN === "true";
+            if (REF_TYPE !== "tag") {
+              if (isDryRun) {
+                console.log(`Dry run on ${REF_TYPE} "${REF_NAME}"; package.json version is ${pkg.version}.`);
+                process.exit(0);
+              }
+              console.error(`Refusing to publish from ${REF_TYPE} "${REF_NAME}". Push or dispatch a v* tag.`);
+              process.exit(1);
+            }
+            const expectedTag = `v${pkg.version}`;
+            if (REF_NAME !== expectedTag) {
+              console.error(`Tag "${REF_NAME}" does not match package.json version "${pkg.version}" (expected "${expectedTag}").`);
+              process.exit(1);
+            }
+            console.log(`Verified tag ${REF_NAME} matches ${pkg.name}@${pkg.version}.`);
+          '
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run release checks
+        run: npm run check:release
+
+      - name: Dry-run npm publish
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true
+        run: npm publish --access public --dry-run
+
+      - name: Publish to npm via OIDC Trusted Publishing
+        if: github.event_name == 'push' || inputs.dry_run == false
+        run: npm publish --access public
+
+      - name: Create GitHub release
+        if: github.event_name == 'push' || inputs.dry_run == false
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "GitHub release $TAG_NAME already exists; skipping creation."
+          else
+            gh release create "$TAG_NAME" --title "$TAG_NAME" --generate-notes
+          fi

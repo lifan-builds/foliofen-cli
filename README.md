@@ -159,6 +159,32 @@ npm run check:release
 The test suite uses synthetic fixtures. Release checks must never launch a live
 portal, read an authenticated browser profile, or inspect a local record store.
 
+### Releasing
+
+Releases are published to npm from GitHub Actions using tokenless OIDC Trusted
+Publishing ([`.github/workflows/release.yml`](.github/workflows/release.yml))
+without stored npm tokens.
+
+One-time npmjs.com setup (under package **Settings → Trusted Publisher** for
+`@lifan-builds/foliofen-cli`, selecting **GitHub Actions**):
+
+- **Organization or user:** `lifan-builds`
+- **Repository:** `foliofen-cli`
+- **Workflow filename:** `release.yml`
+- **Environment name:** *(leave blank)*
+
+To publish a release, bump `version` in `package.json`, update `CHANGELOG.md`,
+merge to `main`, and push the matching `v<version>` tag:
+
+```bash
+git tag v0.1.3
+git push origin v0.1.3
+```
+
+You can also run the workflow manually via `workflow_dispatch` with
+`dry_run: true` (the default) to verify tests, `check:release`, and
+`npm publish --access public --dry-run` without publishing.
+
 ## Project structure
 
 ```text
