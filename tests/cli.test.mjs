@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 lifan-builds. Foliofen CLI; Section 7 attribution terms in ATTRIBUTION.md.
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -42,11 +43,22 @@ test('CLI help advertises agent-facing commands', async () => {
   assert.match(output, /sync \[--login\]/);
   assert.match(output, /--seed-url URL/);
   assert.match(output, /records list/);
-  assert.match(output, /export markdown/);
-  assert.match(output, /export jsonl/);
+  for (const format of ['markdown', 'jsonl']) {
+    const synopsis = output.split('\n').find((line) => line.includes(`export ${format} `));
+    for (const option of ['--require-active-patient TEXT', '--patient TEXT', '--patient-key KEY']) {
+      assert.ok(synopsis?.includes(`[${option}]`), `${format} help should include ${option}`);
+    }
+  }
   assert.match(output, /export inspect/);
   assert.doesNotMatch(output, /\bask\b/);
   assert.doesNotMatch(output, /\b(?:AI|LLM|medical advice)\b/i);
+});
+
+test('command-group help exits successfully before accessing the store', () => {
+  for (const [group, help] of [['records', 'help'], ['browser', '--help'], ['export', '-h']]) {
+    const output = execFileSync(process.execPath, ['src/cli.mjs', group, help, '--store', process.execPath], { encoding: 'utf8' });
+    assert.match(output, /^Usage:/);
+  }
 });
 
 test('CLI sync parses value-bearing options as sync options without ambient CDP', async () => {
