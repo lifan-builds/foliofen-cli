@@ -48,8 +48,8 @@ function usage() {
   foliofen-cli sync [--login] [--categories visits,test-results,imaging] [--require-active-patient TEXT] [--exhaustive] [--max-broad-pages N] [--seed-url URL] [--force] [--max-pages N] [--max-records N] [--switch-patient TEXT]
   foliofen-cli records list [--patient-label-exact TEXT] [--source-host HOST] [--category TEXT] [--query TEXT] [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] [--json] [--store PATH] [--data-dir PATH]
   foliofen-cli records show --id ID [--json] [--store PATH] [--data-dir PATH]
-  foliofen-cli export markdown [--sync] [--latest-day|--since-last-pull --pull-state PATH|--days N|--start-date YYYY-MM-DD --end-date YYYY-MM-DD|--all] [--patient-label-exact TEXT] [--source-host HOST] [--output PATH|--output-dir PATH] [--json-summary] [--store PATH] [--data-dir PATH]
-  foliofen-cli export jsonl [--sync] [--latest-day|--since-last-pull --pull-state PATH|--days N|--start-date YYYY-MM-DD --end-date YYYY-MM-DD|--all] [--patient-label-exact TEXT] [--source-host HOST] [--output PATH|--output-dir PATH] [--json-summary] [--store PATH] [--data-dir PATH]
+  foliofen-cli export markdown [--sync] [--latest-day|--since-last-pull --pull-state PATH|--days N|--start-date YYYY-MM-DD --end-date YYYY-MM-DD|--all] [--require-active-patient TEXT] [--patient TEXT] [--patient-key KEY] [--patient-label-exact TEXT] [--source-host HOST] [--output PATH|--output-dir PATH] [--json-summary] [--store PATH] [--data-dir PATH]
+  foliofen-cli export jsonl [--sync] [--latest-day|--since-last-pull --pull-state PATH|--days N|--start-date YYYY-MM-DD --end-date YYYY-MM-DD|--all] [--require-active-patient TEXT] [--patient TEXT] [--patient-key KEY] [--patient-label-exact TEXT] [--source-host HOST] [--output PATH|--output-dir PATH] [--json-summary] [--store PATH] [--data-dir PATH]
   foliofen-cli export inspect FILE [--json]
 `;
 }
@@ -141,6 +141,9 @@ async function withSession(options, callback) {
 }
 
 async function commandBrowser(subcommand, options) {
+  if (subcommand === 'start' || subcommand === 'ensure') {
+    await loadEnvironmentFile({ envPath: options.envFile || DEFAULT_ENV_PATH });
+  }
   if (subcommand === 'start') {
     if (options.profileDir) process.env.AWESOME_MYCHART_PROFILE_DIR = options.profileDir;
     const result = await initLiveHarness({
@@ -471,6 +474,10 @@ export async function main(argv = process.argv.slice(2)) {
       return;
     }
     process.stdout.write(`${formatSyntheticDemo()}\n`);
+    return;
+  }
+  if (['browser', 'records', 'export'].includes(command) && ['help', '--help', '-h'].includes(subcommand)) {
+    process.stdout.write(usage());
     return;
   }
   const options = applyRuntimePathDefaults(parseOptions(rest));

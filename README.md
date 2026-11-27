@@ -49,7 +49,7 @@ Set the portal URL in your shell or in the default private data directory:
 
 ```bash
 mkdir -p "$HOME/Library/Application Support/mychart-cli"
-cp .env.example "$HOME/Library/Application Support/mychart-cli/.env"
+cp "$(npm root --global)/@lifan-builds/foliofen-cli/.env.example" "$HOME/Library/Application Support/mychart-cli/.env"
 chmod 600 "$HOME/Library/Application Support/mychart-cli/.env"
 ```
 
